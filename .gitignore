@@ -3,3 +3,5 @@
 Makefile
 compile_commands.json
 pacman
+*.o
+moc_*.*
