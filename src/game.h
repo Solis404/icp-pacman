@@ -4,6 +4,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include "map_item.h"
+#include "entity.h"
 
 /**
 @brief Třída reprezentující samotnou hru
@@ -16,6 +17,7 @@ class Game {
     Map_item*** matrix_repr;    //2d pole ukazatelů
     unsigned map_height;
     unsigned map_width;
+    Entity* pacman;
 
     public:
     //konstruktor, destruktor

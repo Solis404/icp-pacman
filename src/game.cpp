@@ -1,4 +1,5 @@
 #include "game.h"
+#include "src/utils.h"
 
 /**
 @brief Konstruktor třídy Game.
@@ -61,6 +62,7 @@ Game::Game(QString file_name){
                     break;
                 case 'S':
                     matrix_repr[i][j] = new Map_item(map_item_type::start);
+                    this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
             }
         }
@@ -94,12 +96,16 @@ void Game::init_scene() {
             scene->addItem(matrix_repr[i][j]->scene_item);
         }
     }
+    //načte pacmana na scénu
+    this->pacman->load_on_scene(scene);
+
     //nastaví pozadí scény na černou
     scene->setBackgroundBrush(Qt::black);
 }
 
 Game::~Game() {
     delete scene;
+    delete pacman;
 
     //destrukce logické reprezentace mapy
     for(unsigned i = 0; i < map_height; ++i) {

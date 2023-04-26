@@ -1,7 +1,6 @@
 #include "qgraphicsitem.h"
 #include <QGraphicsPixmapItem>
-
-#define SPRITE_SIZE 20
+#include "utils.h"
 
 /**
 @brief Výčet reprezentující typ nehybné položky na mapě
