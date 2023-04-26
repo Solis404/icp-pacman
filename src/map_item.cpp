@@ -4,7 +4,6 @@
 @brief Řetězce cest k souborům s texturamy jednotlivých položek mapy
 
 Jsou v takovém pořadí, aby se daly indexovat pomocí map_item_type
-TODO: nahradit placeholder za právoplatné textury
 */
 const QString map_item_sprite_files[] = {"sprites/map_sprites/road.png",
                                          "sprites/map_sprites/wall.png",
