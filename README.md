@@ -1,8 +1,11 @@
 # TODO
 - sehnat všechny textury (Pixmaps)
-- vysvětlit Patrikovi ideu za OO designem
-- zobrazování/načítání mapy
+- vytvořit robustní načítání mapy (nevybuchne to při špatném vstupu)
+- vytvořit nějaké rozumné načítání mapy, nemít tu cestu přímo zapečenou v souboru
 - hýbání s pacmanem
+
+## Když bude čas
+- zpracovat obrázky do qrescources, zapéct do executable
 
 # Jak vyvíjet?
 1. Vygenerovat Makefile z project file-u pomocí `qmake pacman.pro`
