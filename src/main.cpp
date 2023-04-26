@@ -5,13 +5,11 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    Game my_game;
-    my_game.addText("hello_world");
+    Game my_game("map.txt");
+    my_game.init_scene();
 
-    QGraphicsView view(&my_game);
+    QGraphicsView view(my_game.scene);
     view.show();
-    
-    //inicializace grafického rozhraní
     
     return app.exec();
 }

@@ -1,8 +1,32 @@
 #include "map_item.h"
 
 /**
-@brief Konstruktor třídy Map_item
-*/
-Map_item::Map_item(QGraphicsItem *parent):QGraphicsPixmapItem(parent){}
+@brief Řetězce cest k souborům s texturamy jednotlivých položek mapy
 
-Map_item::~Map_item(){}
+Jsou v takovém pořadí, aby se daly indexovat pomocí map_item_type
+TODO: nahradit placeholder za právoplatné textury
+*/
+const QString map_item_sprite_files[] = {"sprites/map_sprites/road.png",
+                                         "sprites/map_sprites/wall.png",
+                                         "sprites/map_sprites/placeholder.png",
+                                         "sprites/map_sprites/placeholder.png",
+                                         "sprites/map_sprites/placeholder.png",
+};
+
+/**
+@brief Konstruktor třídy Map_item
+
+Vytvoří objekt map_item s daným typem a vytvoří grafickou reprezentaci scene_item
+@param type - typ položky, jeden z "road", "wall", "key", "start", "finish"
+*/
+Map_item::Map_item(map_item_type type) {
+    //nastavení správné cesty k textuře a nahrání pixmapy
+    QString file_name = map_item_sprite_files[type];
+    QPixmap pixmap(file_name);
+
+    //vytvoření grafické reprezentace, bude zdestruováno při destrukci scény
+    scene_item = new QGraphicsPixmapItem(pixmap);
+}
+
+Map_item::~Map_item(){
+}

@@ -4,6 +4,7 @@ HEADERS = $${SRC_DIR}/*.h
 
 CONFIG += warn_on
 CONFIG += c++17
+CONFIG += debug
 
 TARGET = pacman
 
