@@ -1,5 +1,4 @@
 #include "game.h"
-#include <iostream>
 
 /**
 @brief Konstruktor třídy Game.
@@ -8,7 +7,7 @@
 Game::Game(QString file_name){
     scene = new QGraphicsScene();
 
-    std::cerr << "[INFO]: Loading map from file:" << file_name.toStdString() << std::endl;
+    qDebug() << "[INFO]: Loading map from file:" << file_name;
 
     //otevření souboru s mapou
     QFile mapfile(file_name);
@@ -23,7 +22,7 @@ Game::Game(QString file_name){
     map_height += 2;
     map_width += 2;
 
-    std::cerr << "[INFO]: Map dimensions:" << map_height << 'x' << map_width << std::endl;
+    qDebug() << "[INFO]: Map dimensions:" << map_height << 'x' << map_width;
 
     //inicializace logické reprezentace herní mapy
     matrix_repr = new Map_item**[map_height];

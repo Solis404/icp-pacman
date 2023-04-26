@@ -2,6 +2,7 @@
 #include <QGraphicsScene>
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
 #include "map_item.h"
 
 /**

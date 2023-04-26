@@ -8,9 +8,9 @@ TODO: nahradit placeholder za právoplatné textury
 */
 const QString map_item_sprite_files[] = {"sprites/map_sprites/road.png",
                                          "sprites/map_sprites/wall.png",
-                                         "sprites/map_sprites/placeholder.png",
-                                         "sprites/map_sprites/placeholder.png",
-                                         "sprites/map_sprites/placeholder.png",
+                                         "sprites/map_sprites/key.png",
+                                         "sprites/map_sprites/start.png",
+                                         "sprites/map_sprites/finish.png",
 };
 
 /**
