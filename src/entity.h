@@ -15,14 +15,17 @@ class Entity {
     unsigned x;
     unsigned y;
 
-    Entity(entity_type type, unsigned x, unsigned y);
-    ~Entity();
-//    void move();
-    void load_on_scene(QGraphicsScene* scene);
-    entity_type get_type();
-
     private:
+    entity_direction direction;
+    unsigned next_sprite_index;
     entity_type type;
 
+    public:
+    Entity(entity_type type, unsigned x, unsigned y);
+    ~Entity();
+    void movement_handler(entity_direction dir);
+    bool move(entity_direction dir);
+    void load_on_scene(QGraphicsScene* scene);
+    entity_type get_type();
     
 };

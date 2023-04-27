@@ -12,6 +12,8 @@
 Detailní popis (TODO)
 */
 class Game {
+    Q_OBJECT
+    
     public:
     QGraphicsScene* scene;
     Map_item*** matrix_repr;    //2d pole ukazatelů
@@ -24,4 +26,7 @@ class Game {
     Game(QString);
     ~Game();
     void init_scene();
+
+    public slots:
+    void pacman_handler(entity_direction dir);
 };

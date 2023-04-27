@@ -116,3 +116,7 @@ Game::~Game() {
     }
     delete [] matrix_repr;
 }
+
+void Game::pacman_handler(entity_direction dir) {
+    pacman->movement_handler(entity_direction dir);
+}

@@ -3,4 +3,6 @@
 #include <QDebug>
 
 #define SPRITE_SIZE 20
-#endif
+#define ANIM_SPRITES 5
+
+#endif //UTILS_H
