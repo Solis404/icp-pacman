@@ -3,11 +3,13 @@
 
 /**
 @brief Konstruktor třídy Game.
-@param file_name - Soubor s uloženou mapou
 */
-Game::Game(QString file_name){
-    scene = new QGraphicsScene();
+Game::Game() : QGraphicsScene() {}
 
+/**
+@brief Načte mapu uloženou v souboru filename
+*/
+void Game::load_map(QString file_name) {
     qDebug() << "[INFO]: Loading map from file:" << file_name;
 
     //otevření souboru s mapou
@@ -25,98 +27,77 @@ Game::Game(QString file_name){
 
     qDebug() << "[INFO]: Map dimensions:" << map_height << 'x' << map_width;
 
-    //inicializace logické reprezentace herní mapy
-    matrix_repr = new Map_item**[map_height];
-    for(unsigned i = 0; i < map_height; i++) {
-        matrix_repr[i] = new Map_item*[map_width];
-        for(unsigned j = 0; j < map_width; ++j) {
-            matrix_repr[i][j] = nullptr;
-        }
-    }
-
-
     //nastavení mapy podle předlohy ze souboru
     //čtení každého řádku
+    Map_item* new_item;    //pomocný ukazatel pro vytvoření nové položky v mapě
     for(unsigned i = 1; i < map_height - 1; i++) {
         QString line = input.readLine();
         unsigned line_index = 0;
         for(unsigned j = 1; j < map_height - 1; j++) {
             QChar character = line.at(line_index);
             line_index++;
+            map_item_type item_type;
             switch(character.toLatin1()) {
                 case 'T':
-                    matrix_repr[i][j] = new Map_item(map_item_type::finish);
+                    item_type = finish;
                     break;
                 case 'X':
-                    matrix_repr[i][j] = new Map_item(map_item_type::wall);
+                    item_type = wall;
                     break;
                 case 'G':
-                    //TODO
-                    matrix_repr[i][j] = new Map_item(map_item_type::road);
+                    item_type = road;
+                    //TODO dodělat inicializaci duchů
                     break;
                 case 'K':
-                    matrix_repr[i][j] = new Map_item(map_item_type::key);
+                    item_type = key;
                     break;
                 case '.':
-                    matrix_repr[i][j] = new Map_item(map_item_type::road);
+                    item_type = road;
                     break;
                 case 'S':
-                    matrix_repr[i][j] = new Map_item(map_item_type::start);
+                    item_type = start;
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
-            }
+                }
+            //vytvoření nové položky a její zařazení do scény
+            new_item = new Map_item(item_type);
+            this->addItem(new_item);    //scéna přebírá vlastnictví, nevolám destruktor
+            //pohyb s položkou na příslušné místo
+            new_item->moveBy(j * SPRITE_SIZE, i * SPRITE_SIZE);
         }
     }
 
-    //inicializace okrajů mapy na zdi
+    /*inicializace okrajů mapy na zdi*/
+
     for(unsigned i = 0; i < map_height; i++) {
-        matrix_repr[i][0] = new Map_item(map_item_type::wall);
+        new_item = new Map_item(map_item_type::wall);
+        this->addItem(new_item);
+        new_item->moveBy(0, i * SPRITE_SIZE);
     }
     for(unsigned i = 0; i < map_height; i++) {
-        matrix_repr[i][map_width - 1] = new Map_item(map_item_type::wall);
+        new_item = new Map_item(map_item_type::wall);
+        this->addItem(new_item);
+        new_item->moveBy((map_width - 1) * SPRITE_SIZE, i * SPRITE_SIZE);
     }
-    //pozor! nesmí se překrývat
+    //pozor! nesmí se překrývat, začíná od 1 a končí dřív
     for(unsigned i = 1; i < map_height - 1; i++) {
-        matrix_repr[0][i] = new Map_item(map_item_type::wall);
+        new_item = new Map_item(map_item_type::wall);
+        this->addItem(new_item);
+        new_item->moveBy(i * SPRITE_SIZE, 0);
     }
     for(unsigned i = 1; i < map_height - 1; i++) {
-        matrix_repr[map_height - 1][i] = new Map_item(map_item_type::wall);
+        new_item = new Map_item(map_item_type::wall);
+        this->addItem(new_item);
+        new_item->moveBy(i * SPRITE_SIZE, (map_height - 1) * SPRITE_SIZE);
     }
 
+    //nastavení černého pozadí
+    this->setBackgroundBrush(Qt::black);
+    this->addItem(this->pacman);
 }
 
-/**
-@brief Metoda inicializující grafickou reprezentaci mapy
-*/
-void Game::init_scene() {
-    //projde celou logickou reprezentaci a přidá všechny objekty na scénu
-    for(unsigned i = 0; i < map_height; ++i) {
-        for(unsigned j = 0; j < map_width; ++j) {
-            matrix_repr[i][j]->scene_item->setPos(j * SPRITE_SIZE, i * SPRITE_SIZE);
-            scene->addItem(matrix_repr[i][j]->scene_item);
-        }
-    }
-    //načte pacmana na scénu
-    this->pacman->load_on_scene(scene);
+Game::~Game() {}
 
-    //nastaví pozadí scény na černou
-    scene->setBackgroundBrush(Qt::black);
-}
-
-Game::~Game() {
-    delete scene;
-    delete pacman;
-
-    //destrukce logické reprezentace mapy
-    for(unsigned i = 0; i < map_height; ++i) {
-        for(unsigned j = 0; j < map_width; ++j) {
-            delete matrix_repr[i][j];
-        }
-        delete [] matrix_repr[i];
-    }
-    delete [] matrix_repr;
-}
-
-void Game::pacman_handler(entity_direction dir) {
-    pacman->movement_handler(entity_direction dir);
-}
+// void Game::pacman_handler(entity_direction dir) {
+//     pacman->movement_handler(entity_direction dir);
+// }

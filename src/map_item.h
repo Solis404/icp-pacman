@@ -5,7 +5,7 @@
 /**
 @brief Výčet reprezentující typ nehybné položky na mapě
 */
-using map_item_type = enum mi_type {road, wall, key, start, finish};
+enum map_item_type{road, wall, key, start, finish};
 
 
 /**
@@ -13,11 +13,10 @@ using map_item_type = enum mi_type {road, wall, key, start, finish};
 @brief Třída zajišťující logickou reprezentaci nepohyblivých položek na mapě
 
 */
-class Map_item {
+class Map_item : public QGraphicsPixmapItem {
     public:
         map_item_type type;
-        QGraphicsPixmapItem* scene_item;    //grafická reprezentace uložená na heapu
     public:
-        Map_item(map_item_type type);
+        Map_item(map_item_type type, QGraphicsItem* parent = nullptr);
         ~Map_item();
 };

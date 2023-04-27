@@ -9,9 +9,8 @@ enum entity_direction {stopped, right, left, up, down};
 /**
 @brief Třída reprezentující pohyblivé entity na mapě
 */
-class Entity {
+class Entity : public QGraphicsPixmapItem{
     public:
-    QGraphicsPixmapItem* scene_item;
     unsigned x;
     unsigned y;
 
@@ -19,13 +18,12 @@ class Entity {
     entity_direction direction;
     unsigned next_sprite_index;
     entity_type type;
+    void move(entity_direction dir);
 
     public:
     Entity(entity_type type, unsigned x, unsigned y);
     ~Entity();
     void movement_handler(entity_direction dir);
-    bool move(entity_direction dir);
-    void load_on_scene(QGraphicsScene* scene);
     entity_type get_type();
     
 };

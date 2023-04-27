@@ -5,16 +5,17 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    Game my_game("map.txt");
-    my_game.init_scene();
+    Game my_game;
+    my_game.load_map("map.txt");
+
 
     for(int i = 0; i < 20; i++) {
-        my_game.pacman->move(entity_direction::right);
+        my_game.pacman->movement_handler(entity_direction::right);
     }
     qDebug() << my_game.pacman->x;
     qDebug() << my_game.pacman->y;
 
-    QGraphicsView view(my_game.scene);
+    QGraphicsView view(&my_game);
     view.show();
     
     return app.exec();

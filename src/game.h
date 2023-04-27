@@ -1,3 +1,4 @@
+#include "qgraphicsscene.h"
 #include "qobjectdefs.h"
 #include <QGraphicsScene>
 #include <QFile>
@@ -11,22 +12,20 @@
 
 Detailní popis (TODO)
 */
-class Game {
+class Game : public QGraphicsScene {
     Q_OBJECT
     
     public:
-    QGraphicsScene* scene;
-    Map_item*** matrix_repr;    //2d pole ukazatelů
     unsigned map_height;
     unsigned map_width;
     Entity* pacman;
 
     public:
     //konstruktor, destruktor
-    Game(QString);
+    Game();
     ~Game();
-    void init_scene();
+    void load_map(QString file_name);
 
-    public slots:
-    void pacman_handler(entity_direction dir);
+    // public slots:
+    // void pacman_handler(entity_direction dir);
 };

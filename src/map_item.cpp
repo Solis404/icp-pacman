@@ -18,13 +18,12 @@ const QString map_item_sprite_files[] = {"sprites/map_sprites/road.png",
 Vytvoří objekt map_item s daným typem a vytvoří grafickou reprezentaci scene_item
 @param type - typ položky, jeden z "road", "wall", "key", "start", "finish"
 */
-Map_item::Map_item(map_item_type type) {
+Map_item::Map_item(map_item_type type, QGraphicsItem* parent) : QGraphicsPixmapItem(parent) {
     //nastavení správné cesty k textuře a nahrání pixmapy
     QString file_name = map_item_sprite_files[type];
     QPixmap pixmap(file_name);
-
-    //vytvoření grafické reprezentace, bude zdestruováno při destrukci scény
-    scene_item = new QGraphicsPixmapItem(pixmap);
+    //nastevení Pixmapy tohoto objektu
+    this->setPixmap(pixmap);
 }
 
 Map_item::~Map_item(){
