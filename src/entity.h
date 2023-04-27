@@ -1,7 +1,10 @@
+#ifndef ENTITY_H
+#define ENTITY_H
 #include "qgraphicsitem.h"
 #include<QGraphicsPixmapItem>
 #include<QGraphicsScene>
 #include "utils.h"
+#include "map_item.h"
 
 enum entity_type {pacman, ghost};
 enum entity_direction {stopped, right, left, up, down};
@@ -23,7 +26,8 @@ class Entity : public QGraphicsPixmapItem{
     public:
     Entity(entity_type type, unsigned x, unsigned y);
     ~Entity();
-    void movement_handler(entity_direction dir);
+    void movement_handler(entity_direction dir, QGraphicsScene* scene);
     entity_type get_type();
     
 };
+#endif //ENTITY_H

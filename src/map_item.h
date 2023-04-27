@@ -1,3 +1,5 @@
+#ifndef MAP_ITEM_H
+#define MAP_ITEM_H
 #include "qgraphicsitem.h"
 #include <QGraphicsPixmapItem>
 #include "utils.h"
@@ -20,3 +22,4 @@ class Map_item : public QGraphicsPixmapItem {
         Map_item(map_item_type type, QGraphicsItem* parent = nullptr);
         ~Map_item();
 };
+#endif //MAP_ITEM_H

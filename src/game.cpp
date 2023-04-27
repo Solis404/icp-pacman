@@ -96,6 +96,23 @@ void Game::load_map(QString file_name) {
     this->addItem(this->pacman);
 }
 
+void Game::keyPressEvent(QKeyEvent *keyEvent) {
+    switch(keyEvent->key()) {
+        case Qt::Key_W:
+            this->pacman->movement_handler(entity_direction::up, this);
+            break;
+        case Qt::Key_A:
+            this->pacman->movement_handler(entity_direction::left, this);
+            break;
+        case Qt::Key_S:
+            this->pacman->movement_handler(entity_direction::down, this);
+            break;
+        case Qt::Key_D:
+            this->pacman->movement_handler(entity_direction::right, this);
+            break;
+    }
+}
+
 Game::~Game() {}
 
 // void Game::pacman_handler(entity_direction dir) {

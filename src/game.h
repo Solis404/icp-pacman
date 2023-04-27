@@ -1,9 +1,12 @@
+#ifndef GAME_H
+#define GAME_H
 #include "qgraphicsscene.h"
 #include "qobjectdefs.h"
 #include <QGraphicsScene>
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QKeyEvent>
 #include "map_item.h"
 #include "entity.h"
 
@@ -25,7 +28,8 @@ class Game : public QGraphicsScene {
     Game();
     ~Game();
     void load_map(QString file_name);
-
+    void keyPressEvent(QKeyEvent *keyEvent) override;
     // public slots:
     // void pacman_handler(entity_direction dir);
 };
+#endif //GAME_H
