@@ -7,6 +7,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include <QKeyEvent>
+#include <QTimer>
 #include "map_item.h"
 #include "entity.h"
 
@@ -23,13 +24,19 @@ class Game : public QGraphicsScene {
     unsigned map_width;
     Entity* pacman;
 
+    private:
+    entity_direction desired_pacman_direction;
+    QTimer* pacman_timer;
+
+
     public:
     //konstruktor, destruktor
-    Game();
+    Game(QString file_name);
     ~Game();
     void load_map(QString file_name);
     void keyPressEvent(QKeyEvent *keyEvent) override;
-    // public slots:
-    // void pacman_handler(entity_direction dir);
+    void start();
+    private slots:
+    void pacman_handler();
 };
 #endif //GAME_H

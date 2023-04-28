@@ -4,7 +4,13 @@
 /**
 @brief Konstruktor třídy Game.
 */
-Game::Game() : QGraphicsScene() {}
+Game::Game(QString file_name) : QGraphicsScene() {
+    load_map(file_name);
+    this->desired_pacman_direction = entity_direction::stopped;
+
+    this->pacman_timer = new QTimer(this);
+    connect(pacman_timer, SIGNAL(timeout()), this, SLOT(pacman_handler()));
+}
 
 /**
 @brief Načte mapu uloženou v souboru filename
@@ -55,7 +61,7 @@ void Game::load_map(QString file_name) {
                     item_type = road;
                     break;
                 case 'S':
-                    item_type = start;
+                    item_type = map_item_type::start;
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
                 }
@@ -96,25 +102,52 @@ void Game::load_map(QString file_name) {
     this->addItem(this->pacman);
 }
 
+/**
+@brief Handler pro stisknutí klávesy
+
+Nastaví požadovaný směr pacmana od uživatele
+*/
 void Game::keyPressEvent(QKeyEvent *keyEvent) {
     switch(keyEvent->key()) {
         case Qt::Key_W:
-            this->pacman->movement_handler(entity_direction::up, this);
+            this->desired_pacman_direction = entity_direction::up;
             break;
         case Qt::Key_A:
-            this->pacman->movement_handler(entity_direction::left, this);
+            this->desired_pacman_direction = entity_direction::left;
             break;
         case Qt::Key_S:
-            this->pacman->movement_handler(entity_direction::down, this);
+            this->desired_pacman_direction = entity_direction::down;
             break;
         case Qt::Key_D:
-            this->pacman->movement_handler(entity_direction::right, this);
+            this->desired_pacman_direction = entity_direction::right;
             break;
     }
 }
 
+/**
+@brief Destruktor
+*/
 Game::~Game() {}
 
-// void Game::pacman_handler(entity_direction dir) {
-//     pacman->movement_handler(entity_direction dir);
-// }
+/**
+@brief Začne hru
+
+Spustí časovače, aby hra reagovala na vstup
+*/
+void Game::start() {
+    this->pacman_timer->start(PACMAN_MOVEMENT_DELAY);
+}
+
+/**
+@brief Pokusí se pohnout s pacmanem směrem, který chce hráč, pokud nelze.
+Pohne s ním v původním směru
+*/
+void Game::pacman_handler() {
+    if(pacman->movement_handler(this->desired_pacman_direction, this)) {
+        qDebug() << "[INFO]: Succesful desired direction movement";
+        return;
+    } else {
+        pacman->movement_handler(this->pacman->get_direction(), this);
+        qDebug() << "[INFO]: Desired direction movement failed continuing";
+    }
+}

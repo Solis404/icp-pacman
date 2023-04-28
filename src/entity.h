@@ -22,12 +22,16 @@ class Entity : public QGraphicsPixmapItem{
     unsigned next_sprite_index;
     entity_type type;
     void move(entity_direction dir);
+    bool aligned_with_grid();
+    bool would_turn(entity_direction dir);
+    void set_next_sprite(entity_direction dir);
 
     public:
     Entity(entity_type type, unsigned x, unsigned y);
     ~Entity();
-    void movement_handler(entity_direction dir, QGraphicsScene* scene);
+    bool movement_handler(entity_direction dir, QGraphicsScene* scene);
     entity_type get_type();
+    entity_direction get_direction();
     
 };
 #endif //ENTITY_H

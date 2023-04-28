@@ -6,7 +6,7 @@
 Proměnná ukládající jména souborů se sprajty animovaného pacmana
 Uděláno tak, že lze indexovat pomocí enumu entity_direction `pacman_sprite_files[direction][N]`
 */
-const QString pacman_sprite_files[5][ANIM_SPRITES] {
+const QString pacman_sprite_files[5][PACMAN_SPRITES] {
     {"sprites/pacman_sprites/stopped.png"},
     {"sprites/pacman_sprites/right0.png",
      "sprites/pacman_sprites/right1.png",
@@ -30,6 +30,14 @@ const QString pacman_sprite_files[5][ANIM_SPRITES] {
      "sprites/pacman_sprites/down4.png"},
 };
 
+/**
+@brief Konstruktor entity, nastaví její typ a úvodní pozici na x, y
+
+Načte také úvodní sprajt entity
+@param entity_type type - Typ entity, výčtový typ = {pacman, ghost}
+@param unsigned x - úvodní horizontální souřadnice entity
+@param unsigned y - úvodní vertikální souřadnice entity (pozor dolů je kladný směr!)
+*/
 Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem() {
     this->x = x;
     this->y = y;
@@ -49,78 +57,147 @@ Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem()
     }
 }
 
+/**
+@brief Destruktor
+*/
 Entity::~Entity() {}
 
+/**
+@brief Getter atributu type
+*/
 entity_type Entity::get_type() {
     return this->type;
 }
 
 /**
-@brief Wrapper pro pohyb s entitou, kontroluje kolizi
+@brief Nastaví další sprajt entity podle atributu next_sprite_index a inkrementuje jej
+
+@param entity_direction dir - Sprajt se volí i na základě směru
 */
-void Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
-    QRectF bounding_rect = this->sceneBoundingRect();
-    QPointF probe1;
-    QPointF probe2;
-    switch(dir) {
-        case entity_direction::right:
-            probe1 = bounding_rect.topRight();
-            probe1.rx()++;
-            probe2 = bounding_rect.bottomRight();
-            probe2.rx()++;
-        break;
-        case entity_direction::left:
-            probe1 = bounding_rect.topLeft();
-            probe1.rx()--;
-            probe2 = bounding_rect.bottomLeft();
-            probe2.rx()--;
-        break;
-        case entity_direction::down:
-            probe1 = bounding_rect.bottomLeft();
-            probe1.ry()++;
-            probe2 = bounding_rect.bottomRight();
-            probe2.ry()++;
-        break;
-        case entity_direction::up:
-            probe1 = bounding_rect.topLeft();
-            probe1.ry()--;
-            probe2 = bounding_rect.topRight();
-            probe2.ry()--;
-        break;
+void Entity::set_next_sprite(entity_direction dir) {
+    QPixmap new_sprite_pixmap;
+
+    //pokud se změnil směr, animace jde od prvního sprajtu
+    if(dir != this->direction) {
+        this->next_sprite_index = 0;
     }
 
-    qDebug() << "probe1:" << probe1 << "probe2" << probe2;
+    switch(this->type) {
+        case pacman:
+            new_sprite_pixmap.load(pacman_sprite_files[dir][this->next_sprite_index]);
+            this->next_sprite_index = (this->next_sprite_index + 1) % PACMAN_SPRITES;
+            break;
+        case ghost:
+            qDebug() << "[WARN]: set_next_sprite not implemented for ghosts";
+            return;
+            break;
+    }
 
-    //kontrola, že v daném směru není zeď
-        Map_item* probe1_target;
-        Map_item* probe2_target;
-    try{
-        probe1_target = static_cast<Map_item*>(scene->itemAt(probe1, QTransform()));
-        probe2_target = static_cast<Map_item*>(scene->itemAt(probe2, QTransform()));
-    } catch(std::bad_cast) {
-        //je tam něco divného
-        return;
-    }
-    if(probe1_target == nullptr || probe2_target == nullptr) {
-        move(dir);
-        return;
-    }
-    if(probe1_target->type == wall || probe2_target->type == wall) {
-        return;
-    }
-    move(dir);
+    this->setPixmap(new_sprite_pixmap);
 }
 
+/**
+@brief Metoda pro zjištění, jestli je entita zarovnaná s mřížkou
+@return bool - Vrací true, pokud je zarovnaná, false pokud není
+*/
+bool Entity::aligned_with_grid() {
+    if(this->x % SPRITE_SIZE == 0 && this->y % SPRITE_SIZE == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+@brief Metoda pro zjištění, jestli entita chce zatočit
+
+Za zatočení se považuje změna směru, která není couvání
+@return bool - Vrací true, pokud by došlo k zatočení, false pokud ne
+*/
+bool Entity::would_turn(entity_direction dir) {
+    switch(this->direction) {
+        case entity_direction::right:
+        case entity_direction::left:
+            if(dir == up || dir == down) {
+                return true;
+            } else {
+                return false;
+            }
+        case entity_direction::up:
+        case entity_direction::down:
+            if(dir == entity_direction::right || dir == entity_direction::left) {
+                return true;
+            } else {
+                return false;
+            }
+    }
+
+    return false;
+}
+
+/**
+@brief Wrapper pro pohyb s entitou, kontroluje kolizi, zajišťuje animaci
+
+Pohyb je povolen pouze po mřížce (není možné změnit směr v půlce bloku)
+
+@param entity_direction dir - Směr ve kterém se má entita pohnout
+@param QGraphicsScene* scene - Scéna, ve které se entita pohybuje, nutné pro kontrolu kolize
+@return bool - Vrací true, pokud se entita pohnula, false pokud ne (nešlo to)
+*/
+bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
+
+    //změnu směru lze provést jen, pokud je entita zarovnaná s mřížkou
+    if(this->would_turn(dir) && !this->aligned_with_grid()) {
+        qDebug() << "[INFO]: Entity cannot change direction without being aligned with the grid";
+        return false;
+    }
+
+    /*detekce kolize, pokud je ve směru pohybu zeď, nic se neprovede*/
+
+    //vyrobení bodu pro vyzkoušení kolize
+    QPointF probe(this->x, this->y);
+    switch(dir) {
+        case entity_direction::right:
+            probe.rx() += SPRITE_SIZE;
+        break;
+        case entity_direction::left:
+            probe.rx() -= 1;
+        break;
+        case entity_direction::down:
+            probe.ry() += SPRITE_SIZE;
+        break;
+        case entity_direction::up:
+            probe.ry() -= 1;
+        break;
+        case entity_direction::stopped:
+        return true;
+    }
+
+    //kontrola, že v daném směru není zeď
+    Map_item* probe_target = static_cast<Map_item*>(scene->itemAt(probe, QTransform()));    //určitě bude Map_item
+    if(probe_target->type == map_item_type::wall) {
+        qDebug() << "[INFO]: Entity cannot continue, wall is in the way";
+        return false;
+    }
+
+    set_next_sprite(dir);
+    move(dir);
+    return true;
+}
 
 /**
 @brief Pohne s entitou o 1px v daném směru
 
+Nekontroluje kolizi, očekává platný pohyb
+
 @param entity_direction dir - Směr ve kterém se má pohnout
 */
 void Entity::move(entity_direction dir) {
+
+    this->direction = dir;    
+
     int dx;
     int dy;
-    QString sprite_path;
     switch(dir) {
         case entity_direction::right:
             dx = 1;
@@ -139,16 +216,20 @@ void Entity::move(entity_direction dir) {
             dy = 1;
             break;
     }
-
-    qDebug() << "Entity with coords x:" << x << "y:" << y << " attempting move";
     
-    //nastaví další sprajt entity (animace) a zvýší index o 1 (cyklus -> %)
-    this->setPixmap(QPixmap(pacman_sprite_files[dir][this->next_sprite_index]));
-    this->next_sprite_index = (this->next_sprite_index + 1) % ANIM_SPRITES;
+    //pohyb
     this->moveBy(dx, dy);
-
-    //nastaví x a y souřadnice
+    //nastaví interní x a y souřadnice
     x = this->scenePos().x();
     y = this->scenePos().y();
+
+    qDebug() << "[INFO]: New entity coords:" << this->scenePos();
+}
+
+/**
+@brief Getter atributu direction
+*/
+entity_direction Entity::get_direction() {
+    return this->direction;
 }
 
