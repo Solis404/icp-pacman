@@ -51,14 +51,14 @@ void Game::load_map(QString file_name) {
                     item_type = wall;
                     break;
                 case 'G':
-                    item_type = road;
+                    continue;
                     //TODO dodělat inicializaci duchů
                     break;
                 case 'K':
                     item_type = key;
                     break;
                 case '.':
-                    item_type = road;
+                    continue;
                     break;
                 case 'S':
                     item_type = map_item_type::start;

@@ -7,7 +7,7 @@
 /**
 @brief Výčet reprezentující typ nehybné položky na mapě
 */
-enum map_item_type{road, wall, key, start, finish};
+enum map_item_type{wall, key, start, finish};
 
 
 /**
