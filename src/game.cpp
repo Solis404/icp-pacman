@@ -5,6 +5,7 @@
 @brief Konstruktor třídy Game.
 */
 Game::Game(QString file_name) : QGraphicsScene() {
+    this->keys_needed = 0;
     load_map(file_name);
     this->desired_pacman_direction = entity_direction::stopped;
 
@@ -56,6 +57,7 @@ void Game::load_map(QString file_name) {
                     break;
                 case 'K':
                     item_type = key;
+                    this->keys_needed++;
                     break;
                 case '.':
                     continue;
@@ -138,16 +140,53 @@ void Game::start() {
     this->pacman_timer->start(PACMAN_MOVEMENT_DELAY);
 }
 
+void Game::stop() {
+    this->pacman_timer->stop();
+}
+
 /**
 @brief Pokusí se pohnout s pacmanem směrem, který chce hráč, pokud nelze.
 Pohne s ním v původním směru
 */
 void Game::pacman_handler() {
+    //zpracování pohybu
     if(pacman->movement_handler(this->desired_pacman_direction, this)) {
         qDebug() << "[INFO]: Succesful desired direction movement";
-        return;
     } else {
         pacman->movement_handler(this->pacman->get_direction(), this);
         qDebug() << "[INFO]: Desired direction movement failed continuing";
+    }
+    //zpracování interakce s okolím
+    pacman_interaction_handler();
+}
+
+/**
+Metoda zajišťující interakci pacnmana s okolím (duchy, klíči, cílem)
+*/
+void Game::pacman_interaction_handler() {
+    QList<QGraphicsItem *> collides_with = this->pacman->collidingItems();
+
+    //nalezení objektů, s nimiž by měl pacman interreagovat
+    for (int i = 0; i < collides_with.size(); ++i) {
+        QGraphicsItem* item = collides_with.at(i);
+        int type = item->data(TYPE_DATA_KEY).toInt();
+        switch(type) {
+            case map_item_type::finish:
+                //v případě cíle musí celý pacman být v cíli
+                if(this->keys_needed == 0 && this->pacman->collidesWithItem(item, Qt::ContainsItemShape) == true) {
+                    qDebug() << "[INFO]: Pacman colliding with finish, ending game";
+                    this->stop();
+                }
+                break;
+            case map_item_type::key:
+                qDebug() << "[INFO]: Pacman colliding with key";
+                this->removeItem(item);    //scéna již objekt klíč nevlastní
+                delete item;
+                this->keys_needed--;
+                break;
+            case entity_type::ghost:
+                qDebug() << "[WARN]: Collision with ghosts not implemented yet";
+                break;
+        }
     }
 }
