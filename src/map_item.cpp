@@ -20,11 +20,21 @@ Vytvoří objekt map_item s daným typem a vytvoří grafickou reprezentaci scen
 Map_item::Map_item(map_item_type type, QGraphicsItem* parent) : QGraphicsPixmapItem(parent) {
     //nastavení správné cesty k textuře a nahrání pixmapy
     QString file_name = map_item_sprite_files[type];
-    this->type = type;
+    this->setData(TYPE_DATA_KEY, QVariant(type));
     QPixmap pixmap(file_name);
     //nastevení Pixmapy tohoto objektu
     this->setPixmap(pixmap);
 }
+
+/**
+@brief Getter pro typ objektu
+@note implementováno pomocí atributu data třídy QGraphicsItem, aby to bylo
+konzistentě implementováno v Map_item i Entity
+*/
+map_item_type Map_item::get_type() {
+    return static_cast<map_item_type>(this->data(TYPE_DATA_KEY).toInt());
+}
+ 
 
 Map_item::~Map_item(){
 }

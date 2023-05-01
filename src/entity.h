@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "map_item.h"
 
-enum entity_type {pacman, ghost};
+enum entity_type {pacman = 10, ghost};    //začátek od 10, aby nedošlo k interferenci mezi typem entity a objektem na mapě (map_item)
 enum entity_direction {stopped, right, left, up, down};
 
 /**
@@ -20,7 +20,6 @@ class Entity : public QGraphicsPixmapItem{
     private:
     entity_direction direction;
     unsigned next_sprite_index;
-    entity_type type;
     void move(entity_direction dir);
     bool aligned_with_grid();
     bool would_turn(entity_direction dir);

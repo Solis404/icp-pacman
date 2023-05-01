@@ -17,8 +17,7 @@ enum map_item_type{wall, key, start, finish};
 */
 class Map_item : public QGraphicsPixmapItem {
     public:
-        map_item_type type;
-    public:
+        map_item_type get_type();
         Map_item(map_item_type type, QGraphicsItem* parent = nullptr);
         ~Map_item();
 };
