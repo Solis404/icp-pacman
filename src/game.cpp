@@ -6,6 +6,7 @@
 */
 Game::Game(QString file_name) : QGraphicsScene() {
     this->keys_needed = 0;
+    this->map_representation = Logical_map();
     load_map(file_name);
     this->desired_pacman_direction = entity_direction::stopped;
 
@@ -32,6 +33,8 @@ void Game::load_map(QString file_name) {
     map_height += 2;
     map_width += 2;
 
+    this->map_representation.new_map(map_width, map_height);
+
     qDebug() << "[INFO]: Map dimensions:" << map_height << 'x' << map_width;
 
     //nastavení mapy podle předlohy ze souboru
@@ -47,22 +50,28 @@ void Game::load_map(QString file_name) {
             switch(character.toLatin1()) {
                 case 'T':
                     item_type = finish;
+                    this->map_representation.set_tile(j, i, finish);
                     break;
                 case 'X':
                     item_type = wall;
+                    this->map_representation.set_tile(j, i, wall);
                     break;
                 case 'G':
+                    this->map_representation.set_tile(j, i, road);
                     continue;
                     //TODO dodělat inicializaci duchů
                     break;
                 case 'K':
                     item_type = key;
+                    this->map_representation.set_tile(j, i, key);
                     this->keys_needed++;
                     break;
                 case '.':
+                    this->map_representation.set_tile(j, i, road);
                     continue;
                     break;
                 case 'S':
+                    this->map_representation.set_tile(j, i, map_item_type::start);
                     item_type = map_item_type::start;
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
@@ -81,22 +90,26 @@ void Game::load_map(QString file_name) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(0, i * SPRITE_SIZE);
+        this->map_representation.set_tile(0, i, wall);
     }
     for(unsigned i = 0; i < map_height; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy((map_width - 1) * SPRITE_SIZE, i * SPRITE_SIZE);
+        this->map_representation.set_tile((map_width - 1) , i, wall);
     }
     //pozor! nesmí se překrývat, začíná od 1 a končí dřív
-    for(unsigned i = 1; i < map_height - 1; i++) {
+    for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(i * SPRITE_SIZE, 0);
+        this->map_representation.set_tile(i , 0, wall);
     }
-    for(unsigned i = 1; i < map_height - 1; i++) {
+    for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
-        new_item->moveBy(i * SPRITE_SIZE, (map_height - 1) * SPRITE_SIZE);
+        new_item->moveBy(i * SPRITE_SIZE, (map_width - 1) * SPRITE_SIZE);
+        this->map_representation.set_tile(i , (map_width - 1), wall);
     }
 
     //nastavení černého pozadí
@@ -161,7 +174,8 @@ void Game::pacman_handler() {
 }
 
 /**
-Metoda zajišťující interakci pacnmana s okolím (duchy, klíči, cílem)
+@brief Metoda zajišťující interakci pacnmana s okolím (duchy, klíči, cílem)
+
 */
 void Game::pacman_interaction_handler() {
     QList<QGraphicsItem *> collides_with = this->pacman->collidingItems();

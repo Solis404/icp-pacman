@@ -11,6 +11,7 @@
 #include "map_item.h"
 #include "entity.h"
 #include "utils.h"
+#include "logic_map.h"
 
 /**
 @brief Třída reprezentující samotnou hru
@@ -24,6 +25,8 @@ class Game : public QGraphicsScene {
     unsigned map_height;
     unsigned map_width;
     Entity* pacman;
+    Logical_map map_representation;
+
 
     private:
     entity_direction desired_pacman_direction;
