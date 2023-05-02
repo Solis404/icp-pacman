@@ -9,6 +9,7 @@
 - zpracovat obrázky do qrescources, zapéct do executable
 - implementace menu a načítání hry pomocí GUI
 - zrobustnění metody pro načítání mapy (lze rozdělit do více)
+- zlepšení user experience pacmana (zatočení v pásmu, ne jen na středu)
 
 # Jak vyvíjet?
 1. Vygenerovat Makefile z project file-u pomocí `qmake pacman.pro`
