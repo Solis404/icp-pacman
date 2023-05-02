@@ -6,12 +6,54 @@
 */
 Game::Game(QString file_name) : QGraphicsScene() {
     this->keys_needed = 0;
+    this->keys_acquired = 0;
+
     this->map_representation = Logical_map();
     load_map(file_name);
     this->desired_pacman_direction = entity_direction::stopped;
 
+    setup_play_time();
+    setup_key_counter();
+
+    this->play_timer = new QTimer(this);
+    connect(this->play_timer, SIGNAL(timeout()), this, SLOT(elapsed_time_handler()));
+
     this->pacman_timer = new QTimer(this);
     connect(pacman_timer, SIGNAL(timeout()), this, SLOT(pacman_handler()));
+}
+
+/**
+@brief Nastaví interní proměnnou reprezentující uplynulý čas a grafickou reprezentaci času
+*/
+void Game::setup_play_time() {
+    //vytvoření infrastruktury pro časovač hry a vypisování uplynulého času
+    this->elapsed_time = QTime(0, 0);
+
+    this->elapsed_time_item = new QGraphicsSimpleTextItem("Time:" + this->elapsed_time.toString("mm:ss"));
+    this->elapsed_time_item->setBrush(QBrush(Qt::white));
+    this->addItem(this->elapsed_time_item);
+    this->elapsed_time_item->moveBy(0, -SPRITE_SIZE);    //posunutí nad mapu
+    
+}
+
+/**
+@brief Helper metoda pro setup počítadla klíčů
+
+Vytvoří jeho grafickou reprezentaci a nastaví na něm správná čísla
+*/
+void Game::setup_key_counter() {
+    this->key_counter= new QGraphicsSimpleTextItem();
+    this->key_counter->setBrush(QBrush(Qt::white));
+    this->addItem(this->key_counter);
+    this->key_counter->moveBy(SPRITE_SIZE * 4, -SPRITE_SIZE);    //posunutí nad mapu
+    this->update_key_counter();
+}
+
+/**
+@brief Helper metoda pro updatování počítadla klíčů
+*/
+void Game::update_key_counter() {
+    this->key_counter->setText("Keys:" + QString::number(this->keys_acquired) + '/' + QString::number(this->keys_needed));
 }
 
 /**
@@ -151,10 +193,12 @@ Spustí časovače, aby hra reagovala na vstup
 */
 void Game::start() {
     this->pacman_timer->start(PACMAN_MOVEMENT_DELAY);
+    this->play_timer->start(1000);    //interval 1s
 }
 
 void Game::stop() {
     this->pacman_timer->stop();
+    this->play_timer->stop();
 }
 
 /**
@@ -187,7 +231,7 @@ void Game::pacman_interaction_handler() {
         switch(type) {
             case map_item_type::finish:
                 //v případě cíle musí celý pacman být v cíli
-                if(this->keys_needed == 0 && this->pacman->collidesWithItem(item, Qt::ContainsItemShape) == true) {
+                if(this->keys_needed == this->keys_acquired && this->pacman->collidesWithItem(item, Qt::ContainsItemShape) == true) {
                     qDebug() << "[INFO]: Pacman colliding with finish, ending game";
                     this->stop();
                 }
@@ -196,11 +240,22 @@ void Game::pacman_interaction_handler() {
                 qDebug() << "[INFO]: Pacman colliding with key";
                 this->removeItem(item);    //scéna již objekt klíč nevlastní
                 delete item;
-                this->keys_needed--;
+                this->keys_acquired++;
+                this->update_key_counter();
                 break;
             case entity_type::ghost:
                 qDebug() << "[WARN]: Collision with ghosts not implemented yet";
                 break;
         }
     }
+}
+
+/**
+@brief Handler pro počítadlo uplynulého času ve hře
+
+Zvýší interní hodnotu času o 1s a updatuje item, který ukazuje čas
+*/
+void Game::elapsed_time_handler() {
+    this->elapsed_time = this->elapsed_time.addSecs(1);
+    this->elapsed_time_item->setText("Time:" + this->elapsed_time.toString("mm:ss"));
 }
