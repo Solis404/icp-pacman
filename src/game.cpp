@@ -10,6 +10,7 @@ k logování nedojde
 */
 Game::Game(game_mode mode, QString input_path, QString log_path) : QGraphicsScene() {
     this->mode = mode;
+    this->state = game_state::init;
     
     this->keys_needed = 0; //nutné inicializovat nyní, v metodě load_map() se k tomu přičítá
     this->keys_acquired = 0;
@@ -222,11 +223,47 @@ Spustí časovače, aby hra reagovala na vstup
 void Game::start() {
     this->pacman_timer->start(PACMAN_MOVEMENT_DELAY);
     this->play_timer->start(1000);    //interval 1s
+    this->state = game_state::playing;
 }
 
-void Game::stop() {
+/**
+@brief Metoda pro zastavení hry s daným výsledkem
+
+Emituje signál game_over
+*/
+void Game::stop(game_result result) {
     this->pacman_timer->stop();
     this->play_timer->stop();
+    this->state = game_state::finished;
+    emit game_over(result);
+}
+
+entity_direction Game::get_dir_from_log() {
+    if(this->movement_log.size() == 0) {    //kontrola konce logu
+        qDebug() << "[INFO]: Reached end of log, ending game";
+        this->stop(game_result::log_end);
+    }
+
+    bool ok;
+    int dir = (QString() + this->movement_log.at(0)).toInt(&ok);
+    if(!ok) {    //znak nebylo možné převést na číslo
+        qDebug() << "[INFO]: Malformed log, ending game";
+        this->stop(game_result::input_file_err);
+    }
+
+    switch(dir) {
+        case entity_direction::stopped:
+        case entity_direction::right:
+        case entity_direction::left:
+        case entity_direction::up:
+        case entity_direction::down:
+            break;
+        default:    //dir není platný směr
+            qDebug() << "[INFO]: Malformed log, ending game";
+            this->stop(game_result::input_file_err);
+    }
+    this->movement_log.remove(0, 1);
+    return static_cast<entity_direction>(dir);
 }
 
 /**
@@ -241,10 +278,11 @@ void Game::pacman_handler() {
 
     //nastaví směr pacmana podle logu
     if(this->mode == game_mode::replay) {
-        int dir = (QString() + this->movement_log.at(0)).toInt();
-        this->movement_log.remove(0, 1);
-        qDebug() << "[INFO]: Dir from log:" << dir;
-        this->desired_pacman_direction = static_cast<entity_direction>(dir);
+        this->desired_pacman_direction = get_dir_from_log();
+    }
+
+    if(this->state != game_state::playing) {
+        return;
     }
     
     //pokusí se pohnout ve vyžadovaném směru, pokud nelze, pokusí se pohnout
@@ -272,7 +310,7 @@ void Game::pacman_interaction_handler() {
                 //v případě cíle musí celý pacman být v cíli
                 if(this->keys_needed == this->keys_acquired && this->pacman->collidesWithItem(item, Qt::ContainsItemShape) == true) {
                     qDebug() << "[INFO]: Pacman reached finish with all keys, ending game";
-                    this->stop();
+                    this->stop(game_result::victory);
                 }
                 break;
             case map_item_type::key:

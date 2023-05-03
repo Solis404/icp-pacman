@@ -16,7 +16,7 @@
 #include "logic_map.h"
 
 //Výčtové typy pro indikaci různých stavů hry/informací o hře
-enum game_result{victory, defeat};
+enum game_result{victory, defeat, log_end, input_file_err};
 enum game_state{init, playing, paused, finished};
 enum game_mode{manual, replay};
 
@@ -60,8 +60,8 @@ class Game : public QGraphicsScene {
     ~Game();
 
     void start();
-    void stop();
     private:
+    void stop(game_result result);
     void load_map(QString input);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
@@ -72,8 +72,14 @@ class Game : public QGraphicsScene {
     void setup_counters();
     void setup_key_counter();
     void update_key_counter();
+    entity_direction get_dir_from_log();
+
     private slots:
     void elapsed_time_handler();
     void pacman_handler();
+
+    signals:
+    game_result game_over(game_result result);    //signál značící konec hry a její výsledek
+
 };
 #endif //GAME_H
