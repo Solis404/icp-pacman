@@ -3,7 +3,6 @@
 - implementovat pathfinding (další třída, log. reprezentace mapy?)
 - implementovat N duchů (vyřešit textury, ovládání pomocí pathfinding)
 - implementace logování hry a zpětného přehrávání
-- implementace "interaktivních prvků (životy pacmana, počet sesbíraných klíčů, ...)"
 
 ### Když bude čas/bude bavit
 - zpracovat obrázky do qrescources, zapéct do executable
@@ -21,3 +20,23 @@
   - vytvoření nových zdrojáků v src/
 
 Pro funkci LSP je nutné vygenerovat compile_commands.json, lze pomocí pomocí nástroje Bear `make clean && bear -- make` Již je přidán v .gitignore
+
+# Implementační detaily
+
+### Pohyb pacmana
+- pacman se pohybuje na mapě načtené ze souboru
+- může se pohybovat pouze po volných(černých) políčcích, pokud narazí do zdi
+  (modrého políčka) zastaví se
+- pacmanův pohyb je řízen časovačem, každých N ms se pohne o jeden px v daném směru
+- směr pohybu pacmana lze řídit klávesamy WASD
+- pacman se může pohybovat pouze po mřížce (ke změně směru smí nastat pouze ve středu políčka)
+
+### Interakce pacmana s okolím
+- pacman interreaguje se svým okolím kolizí
+- prvky s kterými pacman interreaguje:
+  1. klíče, může je sebrat
+  2. cíl, pokud dojde do cíle a všechny klíče jsou sebrané, hra končí úspěchem
+  3. TODO - duchové
+
+### Logování
+TODO
