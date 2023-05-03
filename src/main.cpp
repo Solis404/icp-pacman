@@ -1,15 +1,23 @@
 #include <QApplication>
 #include <QGraphicsView>
+#include <cstdlib>
+#include <stdexcept>
 #include "game.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    Game my_game(game_mode::replay, "logfile");
+    Game* my_game;
+    try{
+        my_game = new Game(game_mode::manual, "map.txt");
+    } catch(std::runtime_error& e) {
+        qDebug() << e.what();
+        return EXIT_FAILURE;
+    }
 
-    my_game.start();
+    my_game->start();
 
-    QGraphicsView view(&my_game);
+    QGraphicsView view(my_game);
     view.show();
     
     return app.exec();

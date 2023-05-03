@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QGraphicsSimpleTextItem>
+#include <exception>
 #include "map_item.h"
 #include "entity.h"
 #include "utils.h"
@@ -62,7 +63,7 @@ class Game : public QGraphicsScene {
     void start();
     private:
     void stop(game_result result);
-    void load_map(QString input);
+    void load_input(QString input);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
 

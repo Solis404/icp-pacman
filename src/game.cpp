@@ -1,4 +1,5 @@
 #include "game.h"
+#include "qnamespace.h"
 #include "src/utils.h"
 
 /**
@@ -7,17 +8,18 @@
 log u replay režimu)
 @param QString log_path - Cesta, kam se má uložit soubor s logováním, pokud není uveden,
 k logování nedojde
+@note Může vyhodit vyjímku std::runtime_error v případě neplatných vstupních dat
 */
 Game::Game(game_mode mode, QString input_path, QString log_path) : QGraphicsScene() {
     this->mode = mode;
     this->state = game_state::init;
     
-    this->keys_needed = 0; //nutné inicializovat nyní, v metodě load_map() se k tomu přičítá
+    this->keys_needed = 0; //nutné inicializovat nyní, v metodě load_input() se k tomu přičítá
     this->keys_acquired = 0;
 
     //čtení a inicializace mapy
     qDebug() << "[INFO]: Loading map from file:" << input_path;
-    load_map(input_path);
+    load_input(input_path);
 
     if(mode == manual && log_path != "") {    //nastavení logování do souboru
         qDebug() << "[INFO]: Saving log file to " << log_path;
@@ -79,16 +81,22 @@ void Game::update_key_counter() {
 @param QString file_name - cesta k souboru s uloženou mapou
 
 Inicializuje proměnné spojené s mapu v třídě Game (map_height, map_width, map_representation)
+@note Může vyhodit vyjímku std::runtime_error v případě neplatných vstupních dat
 */
-void Game::load_map(QString input_path) {
+void Game::load_input(QString input_path) {
 
     //načtení výšky a šířky mapy
     QFile input_file = QFile(input_path);
-    input_file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream input = QTextStream(&input_file);
+    input_file.open(QIODevice::ReadOnly | QIODevice::Text);    //otevření souboru pro čtení
+    QTextStream input = QTextStream(&input_file);    //Stream pro čtení
+
     input >> map_height;
     input >> map_width;
-    input.readLine();    //dočtení řádku do konce 
+    if(map_height == 0 || map_width == 0) {
+        throw std::runtime_error("Invalid map size");
+    }
+    
+    input.readLine();    //dočtení řádku do konce
     //ve skutečnosti ještě mapu obklopuje neuvedená zeď
     map_height += 2;
     map_width += 2;
@@ -100,16 +108,31 @@ void Game::load_map(QString input_path) {
     //nastavení mapy podle předlohy ze souboru
     //čtení každého řádku
     Map_item* new_item;    //pomocný ukazatel pro vytvoření nové položky v mapě
+    size_t finish_num = 0;
+    size_t pacman_num = 0;
     for(unsigned i = 1; i < map_height - 1; i++) {
+        if(input.atEnd()) {    //předčasně ukončená mapa, nesouhlasí výška
+            delete this->map_representation;
+            throw std::runtime_error("Malformed map data");
+        }
         QString line = input.readLine();
+        if(static_cast<unsigned>(line.size()) != map_width - 2) {
+            delete this->map_representation;
+            throw std::runtime_error("Garbage data after line in map data");
+        }
         unsigned line_index = 0;
-        for(unsigned j = 1; j < map_height - 1; j++) {
+        for(unsigned j = 1; j < map_width - 1; j++) {
+            if(line_index >= static_cast<unsigned>(line.size())) {    //nesouhlasí šířka
+                delete this->map_representation;
+                throw std::runtime_error("Malformed map data");
+            }
             QChar character = line.at(line_index);
             line_index++;
             map_item_type item_type;
             switch(character.toLatin1()) {
                 case 'T':
                     item_type = finish;
+                    finish_num++;
                     this->map_representation->set_tile(j, i, finish);
                     break;
                 case 'X':
@@ -132,9 +155,13 @@ void Game::load_map(QString input_path) {
                     break;
                 case 'S':
                     this->map_representation->set_tile(j, i, map_item_type::start);
+                    pacman_num++;
                     item_type = map_item_type::start;
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
+                default:
+                    delete this->map_representation;
+                    throw std::runtime_error("Unknown tile character in map data");
                 }
             //vytvoření nové položky a její zařazení do scény
             new_item = new Map_item(item_type);
@@ -144,6 +171,12 @@ void Game::load_map(QString input_path) {
         }
     }
 
+    //sémantická kontrola počtu políček
+    if(pacman_num != 1 || finish_num != 1) {
+        delete this->map_representation;
+        throw std::runtime_error("There can only be one start and finish tile");
+    }
+    
     /*inicializace okrajů mapy na zdi*/
 
     for(unsigned i = 0; i < map_height; i++) {
@@ -168,15 +201,17 @@ void Game::load_map(QString input_path) {
     for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
-        new_item->moveBy(i * SPRITE_SIZE, (map_width - 1) * SPRITE_SIZE);
-        this->map_representation->set_tile(i , (map_width - 1), wall);
+        new_item->moveBy(i * SPRITE_SIZE, (map_height - 1) * SPRITE_SIZE);
+        this->map_representation->set_tile(i , (map_height - 1), wall);
     }
 
     //nastavení černého pozadí
     this->setBackgroundBrush(Qt::black);
     this->addItem(this->pacman);
 
-    this->movement_log = input.readLine();
+    if(this->mode == game_mode::replay) {    //v případě replaye je poslední řádek log pohybu
+        this->movement_log = input.readLine();
+    }
 }
 
 /**

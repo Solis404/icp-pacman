@@ -2,12 +2,10 @@
 ### Nutné pro zápočet
 - implementovat pathfinding (další třída, log. reprezentace mapy?)
 - implementovat N duchů (vyřešit textury, ovládání pomocí pathfinding)
-- implementace logování hry a zpětného přehrávání
 
 ### Když bude čas/bude bavit
 - zpracovat obrázky do qrescources, zapéct do executable
 - implementace menu a načítání hry pomocí GUI
-- zrobustnění metody pro načítání mapy (lze rozdělit do více)
 - zlepšení user experience pacmana (zatočení v pásmu, ne jen na středu)
 
 # Jak vyvíjet?
