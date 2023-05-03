@@ -40,27 +40,29 @@ class Game : public QGraphicsScene {
 
     private:
     entity_direction desired_pacman_direction;
+
     QTimer* pacman_timer;
     QTimer* play_timer;
     QTime elapsed_time;
+
     size_t keys_acquired; 
     size_t keys_needed;
-    QGraphicsSimpleTextItem* elapsed_time_item;
-    QGraphicsSimpleTextItem* key_counter;
 
-    QFile* logging_file;
-    QString movement_log;
+    QGraphicsSimpleTextItem* elapsed_time_item;    //zobrazovaný čas
+    QGraphicsSimpleTextItem* key_counter;    //zobrazované počítadlo klíčů
+
+    QFile* log_file;    //soubor pro logování
+    QString movement_log;    //místo pro uložení logu pohybu
 
     public:
     //konstruktor, destruktor
-    Game(QString log_path);
-    Game(QString map_path, QString log_path);
+    Game(game_mode mode, QString input_path, QString log_path = "");
     ~Game();
 
     void start();
     void stop();
     private:
-    void load_map(QString file_name);
+    void load_map(QString input);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
 

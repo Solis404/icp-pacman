@@ -5,7 +5,7 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    Game my_game("map.txt", "logfile");
+    Game my_game(game_mode::replay, "logfile");
 
     my_game.start();
 
