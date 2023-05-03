@@ -47,8 +47,9 @@ class Game : public QGraphicsScene {
     size_t keys_needed;
     QGraphicsSimpleTextItem* elapsed_time_item;
     QGraphicsSimpleTextItem* key_counter;
-    QFile* logging_file;
 
+    QFile* logging_file;
+    QString movement_log;
 
     public:
     //konstruktor, destruktor

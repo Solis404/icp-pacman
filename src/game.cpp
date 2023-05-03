@@ -16,10 +16,12 @@ Game::Game(QString map_path, QString log_path) : QGraphicsScene() {
     load_map(map_path);
 
     if(log_path != "") {
+        qDebug() << "[INFO]: Saving log file to " << log_path;
         QFile::copy(map_path, log_path);    //mapa se uloží do logovacího souboru
         this->logging_file = new QFile(log_path);
         this->logging_file->open(QIODevice::Text | QIODevice::Append);
     } else {
+        qDebug() << "[INFO]: No log path specified, logging disabled";
         this->logging_file = nullptr;
     }
 
@@ -201,6 +203,11 @@ void Game::keyPressEvent(QKeyEvent *keyEvent) {
 */
 Game::~Game() {
     delete this->map_representation;
+
+    if(this->logging_file != nullptr) {    //zapíše do logovacího souboru log pohybu
+        QTextStream log(this->logging_file);
+        log << this->movement_log << Qt::endl;
+    }
 }
 
 /**
@@ -223,10 +230,9 @@ void Game::stop() {
 Pohne s ním v původním směru
 */
 void Game::pacman_handler() {
-    //logování
+    //zapíše právě chtěný pohyb pacmana do řetězce pro logování
     if(this->logging_file != nullptr) {
-        QTextStream log(this->logging_file);
-        log << this->desired_pacman_direction;
+        this->movement_log.append(QString::number(this->desired_pacman_direction));
     }
     
     //pokusí se pohnout ve vyžadovaném směru, pokud nelze, pokusí se pohnout
