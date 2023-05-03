@@ -39,4 +39,7 @@ Pro funkci LSP je nutné vygenerovat compile_commands.json, lze pomocí pomocí 
   3. TODO - duchové
 
 ### Logování
-TODO
+- hra lze spustit v režimu REPLAY, potom je vstupní logovací soubor použit jako podklad jak
+  pro mapu, tak jako zdroj vstupů pro pacmana
+- v tomto režimu se pouze přehrává, hráč nemůže interreagovat se hrou, dokud neskončí (buď
+  koncem logu nebo prohrou/výhrou)
