@@ -15,10 +15,17 @@
 #include "utils.h"
 #include "logic_map.h"
 
-/**
-@brief Třída reprezentující samotnou hru
+//Výčtové typy pro indikaci různých stavů hry/informací o hře
+enum game_result{victory, defeat};
+enum game_state{init, playing, paused, finished};
+enum game_mode{manual, replay};
 
-Detailní popis (TODO)
+/**
+@brief Třída reprezentující samotnou hru, její logiku a reprezentaci
+
+Dědí od QT třídy QGraphicsScene, tudíž v sobě zakomponovává i grafickou reprezentaci,
+kterou lze vizualizovat pomocí QGraphicsView. Při její konstrukci dojde k vytvoření
+mapy. Metodou start() se hra spustí a TODO
 */
 class Game : public QGraphicsScene {
     Q_OBJECT
@@ -27,8 +34,9 @@ class Game : public QGraphicsScene {
     unsigned map_height;
     unsigned map_width;
     Entity* pacman;
-    Logical_map map_representation;
-
+    Logical_map* map_representation;
+    game_mode mode;
+    game_state state;
 
     private:
     entity_direction desired_pacman_direction;
@@ -39,12 +47,15 @@ class Game : public QGraphicsScene {
     size_t keys_needed;
     QGraphicsSimpleTextItem* elapsed_time_item;
     QGraphicsSimpleTextItem* key_counter;
+    QFile* logging_file;
 
 
     public:
     //konstruktor, destruktor
-    Game(QString file_name);
+    Game(QString log_path);
+    Game(QString map_path, QString log_path);
     ~Game();
+
     void start();
     void stop();
     private:
@@ -55,6 +66,7 @@ class Game : public QGraphicsScene {
     void pacman_interaction_handler();
 
     void setup_play_time();
+    void setup_counters();
     void setup_key_counter();
     void update_key_counter();
     private slots:

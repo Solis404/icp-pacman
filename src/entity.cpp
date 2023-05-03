@@ -148,7 +148,6 @@ bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
 
     //změnu směru lze provést jen, pokud je entita zarovnaná s mřížkou
     if(this->would_turn(dir) && !this->aligned_with_grid()) {
-        qDebug() << "[INFO]: Entity cannot change direction without being aligned with the grid";
         return false;
     }
 
@@ -176,7 +175,6 @@ bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
     //kontrola, že v daném směru není zeď
     Map_item* probe_target = static_cast<Map_item*>(scene->itemAt(probe, QTransform()));
     if(probe_target != nullptr && probe_target->get_type() == map_item_type::wall) {
-        qDebug() << "[INFO]: Entity cannot continue, wall is in the way";
         return false;
     }
 
@@ -222,8 +220,6 @@ void Entity::move(entity_direction dir) {
     //nastaví interní x a y souřadnice
     x = this->scenePos().x();
     y = this->scenePos().y();
-
-    qDebug() << "[INFO]: New entity coords:" << this->scenePos();
 }
 
 /**

@@ -1,15 +1,9 @@
 #include "logic_map.h"
 
-Logical_map::Logical_map(){
-    this->width = 0;
-    this->height = 0;
-    this->map = nullptr;
-}
-
 /**
 @brief Kontruktor, inicializuje prázdnou mapu s šířkou width a výškou height
 */
-void Logical_map::new_map(size_t width, size_t height) {
+Logical_map::Logical_map(size_t width, size_t height){
     this->width = width;
     this->height = height;
 

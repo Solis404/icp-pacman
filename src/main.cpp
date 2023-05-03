@@ -5,7 +5,7 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    Game my_game("map.txt");
+    Game my_game("map.txt", "");
 
     my_game.start();
 

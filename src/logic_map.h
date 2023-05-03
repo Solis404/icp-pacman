@@ -16,9 +16,8 @@ class Logical_map {
     map_item_type* map;
 
     public:    
-    Logical_map();
+    Logical_map(size_t width, size_t height);
     ~Logical_map();
-    void new_map(size_t width, size_t height);
     void set_tile(size_t x, size_t y, map_item_type tile_type);
     map_item_type get_tile(size_t x, size_t y);
     void pathfind_bfs();

@@ -2,55 +2,67 @@
 #include "src/utils.h"
 
 /**
-@brief Konstruktor třídy Game.
+@brief Konstruktor, který vytvoří hru v manuálním režimu
+@param QString map_path - Cesta k uložené mapě
+@param QString log_path - Cesta, kam se má uložit soubor s logováním, pokud je log_path
+prázdný řetězec, k logování nedojde
 */
-Game::Game(QString file_name) : QGraphicsScene() {
-    this->keys_needed = 0;
+Game::Game(QString map_path, QString log_path) : QGraphicsScene() {
+    this->mode = manual;
+    
+    this->keys_needed = 0; //nutné inicializovat nyní, v metodě load_map() se k tomu přičítá
     this->keys_acquired = 0;
 
-    this->map_representation = Logical_map();
-    load_map(file_name);
-    this->desired_pacman_direction = entity_direction::stopped;
+    load_map(map_path);
 
-    setup_play_time();
-    setup_key_counter();
+    if(log_path != "") {
+        QFile::copy(map_path, log_path);    //mapa se uloží do logovacího souboru
+        this->logging_file = new QFile(log_path);
+        this->logging_file->open(QIODevice::Text | QIODevice::Append);
+    } else {
+        this->logging_file = nullptr;
+    }
+
+    setup_counters();
 
     this->play_timer = new QTimer(this);
     connect(this->play_timer, SIGNAL(timeout()), this, SLOT(elapsed_time_handler()));
 
+    this->desired_pacman_direction = entity_direction::stopped;
     this->pacman_timer = new QTimer(this);
     connect(pacman_timer, SIGNAL(timeout()), this, SLOT(pacman_handler()));
 }
 
 /**
-@brief Nastaví interní proměnnou reprezentující uplynulý čas a grafickou reprezentaci času
+@brief Helper metoda inicializující počítadla času a klíčů
+
+Inicilizuje příslušné proměnné pro čítače a jejich grafické reprezentace
 */
-void Game::setup_play_time() {
+void Game::setup_counters() {
     //vytvoření infrastruktury pro časovač hry a vypisování uplynulého času
     this->elapsed_time = QTime(0, 0);
 
+    //vytvoření grafických reprezentací
     this->elapsed_time_item = new QGraphicsSimpleTextItem("Time:" + this->elapsed_time.toString("mm:ss"));
+    this->key_counter= new QGraphicsSimpleTextItem();
+
+    //nastavení vlastností a posunutí na příslušnou pozici
     this->elapsed_time_item->setBrush(QBrush(Qt::white));
     this->addItem(this->elapsed_time_item);
     this->elapsed_time_item->moveBy(0, -SPRITE_SIZE);    //posunutí nad mapu
-    
-}
 
-/**
-@brief Helper metoda pro setup počítadla klíčů
-
-Vytvoří jeho grafickou reprezentaci a nastaví na něm správná čísla
-*/
-void Game::setup_key_counter() {
-    this->key_counter= new QGraphicsSimpleTextItem();
     this->key_counter->setBrush(QBrush(Qt::white));
     this->addItem(this->key_counter);
     this->key_counter->moveBy(SPRITE_SIZE * 4, -SPRITE_SIZE);    //posunutí nad mapu
+    
+    //update čítače klíčů
     this->update_key_counter();
 }
 
 /**
 @brief Helper metoda pro updatování počítadla klíčů
+
+Jsou updatovány hodnotami atributů keys_needed a keys_acquired
 */
 void Game::update_key_counter() {
     this->key_counter->setText("Keys:" + QString::number(this->keys_acquired) + '/' + QString::number(this->keys_needed));
@@ -58,6 +70,9 @@ void Game::update_key_counter() {
 
 /**
 @brief Načte mapu uloženou v souboru filename
+@param QString file_name - cesta k souboru s uloženou mapou
+
+Inicializuje proměnné spojené s mapu v třídě Game (map_height, map_width, map_representation)
 */
 void Game::load_map(QString file_name) {
     qDebug() << "[INFO]: Loading map from file:" << file_name;
@@ -75,7 +90,7 @@ void Game::load_map(QString file_name) {
     map_height += 2;
     map_width += 2;
 
-    this->map_representation.new_map(map_width, map_height);
+    this->map_representation = new Logical_map(map_width, map_height);
 
     qDebug() << "[INFO]: Map dimensions:" << map_height << 'x' << map_width;
 
@@ -92,28 +107,28 @@ void Game::load_map(QString file_name) {
             switch(character.toLatin1()) {
                 case 'T':
                     item_type = finish;
-                    this->map_representation.set_tile(j, i, finish);
+                    this->map_representation->set_tile(j, i, finish);
                     break;
                 case 'X':
                     item_type = wall;
-                    this->map_representation.set_tile(j, i, wall);
+                    this->map_representation->set_tile(j, i, wall);
                     break;
                 case 'G':
-                    this->map_representation.set_tile(j, i, road);
+                    this->map_representation->set_tile(j, i, road);
                     continue;
                     //TODO dodělat inicializaci duchů
                     break;
                 case 'K':
                     item_type = key;
-                    this->map_representation.set_tile(j, i, key);
+                    this->map_representation->set_tile(j, i, key);
                     this->keys_needed++;
                     break;
                 case '.':
-                    this->map_representation.set_tile(j, i, road);
+                    this->map_representation->set_tile(j, i, road);
                     continue;
                     break;
                 case 'S':
-                    this->map_representation.set_tile(j, i, map_item_type::start);
+                    this->map_representation->set_tile(j, i, map_item_type::start);
                     item_type = map_item_type::start;
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
@@ -132,26 +147,26 @@ void Game::load_map(QString file_name) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(0, i * SPRITE_SIZE);
-        this->map_representation.set_tile(0, i, wall);
+        this->map_representation->set_tile(0, i, wall);
     }
     for(unsigned i = 0; i < map_height; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy((map_width - 1) * SPRITE_SIZE, i * SPRITE_SIZE);
-        this->map_representation.set_tile((map_width - 1) , i, wall);
+        this->map_representation->set_tile((map_width - 1) , i, wall);
     }
     //pozor! nesmí se překrývat, začíná od 1 a končí dřív
     for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(i * SPRITE_SIZE, 0);
-        this->map_representation.set_tile(i , 0, wall);
+        this->map_representation->set_tile(i , 0, wall);
     }
     for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(i * SPRITE_SIZE, (map_width - 1) * SPRITE_SIZE);
-        this->map_representation.set_tile(i , (map_width - 1), wall);
+        this->map_representation->set_tile(i , (map_width - 1), wall);
     }
 
     //nastavení černého pozadí
@@ -184,7 +199,9 @@ void Game::keyPressEvent(QKeyEvent *keyEvent) {
 /**
 @brief Destruktor
 */
-Game::~Game() {}
+Game::~Game() {
+    delete this->map_representation;
+}
 
 /**
 @brief Začne hru
@@ -206,12 +223,16 @@ void Game::stop() {
 Pohne s ním v původním směru
 */
 void Game::pacman_handler() {
-    //zpracování pohybu
-    if(pacman->movement_handler(this->desired_pacman_direction, this)) {
-        qDebug() << "[INFO]: Succesful desired direction movement";
-    } else {
+    //logování
+    if(this->logging_file != nullptr) {
+        QTextStream log(this->logging_file);
+        log << this->desired_pacman_direction;
+    }
+    
+    //pokusí se pohnout ve vyžadovaném směru, pokud nelze, pokusí se pohnout
+    //stejným směrem jako minule
+    if(!pacman->movement_handler(this->desired_pacman_direction, this)) {
         pacman->movement_handler(this->pacman->get_direction(), this);
-        qDebug() << "[INFO]: Desired direction movement failed continuing";
     }
     //zpracování interakce s okolím
     pacman_interaction_handler();
@@ -232,12 +253,12 @@ void Game::pacman_interaction_handler() {
             case map_item_type::finish:
                 //v případě cíle musí celý pacman být v cíli
                 if(this->keys_needed == this->keys_acquired && this->pacman->collidesWithItem(item, Qt::ContainsItemShape) == true) {
-                    qDebug() << "[INFO]: Pacman colliding with finish, ending game";
+                    qDebug() << "[INFO]: Pacman reached finish with all keys, ending game";
                     this->stop();
                 }
                 break;
             case map_item_type::key:
-                qDebug() << "[INFO]: Pacman colliding with key";
+                qDebug() << "[INFO]: Pacman acquired key";
                 this->removeItem(item);    //scéna již objekt klíč nevlastní
                 delete item;
                 this->keys_acquired++;
