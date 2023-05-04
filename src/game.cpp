@@ -350,8 +350,7 @@ void Game::pacman_interaction_handler() {
                 break;
             case map_item_type::key:
                 qDebug() << "[INFO]: Pacman acquired key";
-                this->removeItem(item);    //scéna již objekt klíč nevlastní
-                delete item;
+                item->hide();
                 this->keys_acquired++;
                 this->update_key_counter();
                 break;

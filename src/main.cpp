@@ -20,5 +20,7 @@ int main(int argc, char* argv[]) {
     QGraphicsView view(my_game);
     view.show();
     
-    return app.exec();
+    app.exec();
+    delete my_game;
+    return EXIT_SUCCESS;
 }
