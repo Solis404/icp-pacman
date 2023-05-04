@@ -3,6 +3,8 @@
 #include "game.h"
 
 int main(int argc, char* argv[]) {
+    srand((unsigned int)time(0));
+
     QApplication app(argc, argv);
 
     Game my_game("map.txt");
