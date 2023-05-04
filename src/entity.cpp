@@ -44,6 +44,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem()
     this->setPos(x, y);
     this->direction = entity_direction::stopped;
     this->next_sprite_index = 0;
+    this->backtrack_log = std::vector<std::tuple<entity_direction, Map_item*>>();
     this->setData(TYPE_DATA_KEY, QVariant(type));
     
     //inicializuje grafickou reprezentaci entity s počátečním sprajtem
@@ -144,7 +145,7 @@ Pohyb je povolen pouze po mřížce (není možné změnit směr v půlce bloku)
 @param QGraphicsScene* scene - Scéna, ve které se entita pohybuje, nutné pro kontrolu kolize
 @return bool - Vrací true, pokud se entita pohnula, false pokud ne (nešlo to)
 */
-bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
+bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene, bool log_backtrack) {
 
     //změnu směru lze provést jen, pokud je entita zarovnaná s mřížkou
     if(this->would_turn(dir) && !this->aligned_with_grid()) {
@@ -174,12 +175,20 @@ bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
 
     //kontrola, že v daném směru není zeď
     Map_item* probe_target = static_cast<Map_item*>(scene->itemAt(probe, QTransform()));
-    if(probe_target != nullptr && probe_target->get_type() == map_item_type::wall) {
-        return false;
+    Map_item* backtrack_ptr = nullptr;
+    if(probe_target != nullptr) {
+        if(probe_target->get_type() == map_item_type::wall) {
+            return false;
+        } else if(probe_target->get_type() == map_item_type::key) {
+            backtrack_ptr = probe_target;
+        }
     }
 
     set_next_sprite(dir);
     move(dir);
+    if(log_backtrack) {
+        this->backtrack_log.push_back(std::tuple<entity_direction, Map_item*>(dir, backtrack_ptr));
+    }
     return true;
 }
 

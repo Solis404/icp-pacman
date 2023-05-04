@@ -319,11 +319,16 @@ void Game::pacman_handler() {
     if(this->state != game_state::playing) {
         return;
     }
+
+    bool should_log_backtrack = false;
+    if(this->mode == replay) {
+        should_log_backtrack = true;
+    }
     
     //pokusí se pohnout ve vyžadovaném směru, pokud nelze, pokusí se pohnout
     //stejným směrem jako minule
-    if(!pacman->movement_handler(this->desired_pacman_direction, this)) {
-        pacman->movement_handler(this->pacman->get_direction(), this);
+    if(!pacman->movement_handler(this->desired_pacman_direction, this, should_log_backtrack)) {
+        pacman->movement_handler(this->pacman->get_direction(), this, should_log_backtrack);
     }
     //zpracování interakce s okolím
     pacman_interaction_handler();
