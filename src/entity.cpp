@@ -6,8 +6,9 @@
 Proměnná ukládající jména souborů se sprajty animovaného pacmana
 Uděláno tak, že lze indexovat pomocí enumu entity_direction `pacman_sprite_files[direction][N]`
 */
+const int GHOST_SHARED = 5;
+
 const QString pacman_sprite_files[5][PACMAN_SPRITES] {
-    {"sprites/pacman_sprites/stopped.png"},
     {"sprites/pacman_sprites/right0.png",
      "sprites/pacman_sprites/right1.png",
      "sprites/pacman_sprites/right2.png",
@@ -28,6 +29,18 @@ const QString pacman_sprite_files[5][PACMAN_SPRITES] {
      "sprites/pacman_sprites/down2.png",
      "sprites/pacman_sprites/down3.png",
      "sprites/pacman_sprites/down4.png"},
+    {"sprites/pacman_sprites/stopped.png"},
+};
+
+const QString ghost_body_temp = "sprites/ghost_sprites/ghost_right.png";
+const QString ghost_scared = "sprites/ghost_sprites/ghost_scared.png";
+
+const QString ghost_sprites_shared[GHOST_SHARED]
+{
+    "sprites/ghost_sprites/eyes_right.png",
+    "sprites/ghost_sprites/eyes_left.png",
+    "sprites/ghost_sprites/eyes_up.png",
+    "sprites/ghost_sprites/eyes_down.png"
 };
 
 /**
@@ -47,14 +60,72 @@ Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem()
     this->type = type;
     
     //inicializuje grafickou reprezentaci entity s počátečním sprajtem
-    switch (type) {
-        case pacman:
-            this->setPixmap(QPixmap(pacman_sprite_files[entity_direction::stopped][0]));
-            break;
-        case ghost:
-            qWarning() << "[WARN]: Ghost not implemented yet!";
-            break;
-    }
+    this->setPixmap(QPixmap(pacman_sprite_files[entity_direction::stopped][0]));
+}
+
+Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixmapItem() {
+    this->x = x;
+    this->y = y;
+    this->setPos(x, y);
+    this->direction = entity_direction::stopped;
+    this->next_sprite_index = 0;
+    this->type = type;
+    this->id = id;
+
+    //inicializuje grafickou reprezentaci entity s počátečním sprajtem
+    get_color_sprites();
+    this->setPixmap(*ghost_sprites[entity_direction::right]);
+}
+
+int Entity::get_random_int(int min, int max)
+{
+    max += 1;
+    max -= min;
+    int rand_num = rand();
+
+    return min + (rand_num % max);
+}
+
+void Entity::get_color_sprites()
+{
+    QPixmap sprite_body, sprite_eyes;
+    QBitmap mask;
+    int r = 0, g = 0, b = 0;
+    
+    sprite_body.load(ghost_body_temp);
+    sprite_eyes.load(ghost_sprites_shared[entity_direction::right]);
+    
+    mask = sprite_body.createMaskFromColor(QColor("#464646"), Qt::MaskOutColor);
+    
+    QPixmap *colored_body = new QPixmap(sprite_body.size());
+
+    colored_body->fill(Qt::transparent);
+
+    QPainter cb_painter(colored_body);
+    cb_painter.drawPixmap(0, 0, sprite_body);
+    cb_painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+
+    r = get_random_int(0, 255);
+    g = get_random_int(0, 255);
+    b = get_random_int(0, 255);
+
+    //TODO implement color saving
+    
+    cb_painter.fillRect(colored_body->rect(), QColor(r, g, b));
+    cb_painter.end();
+    
+    QPixmap *new_sprite = new QPixmap(colored_body->size());
+    new_sprite->fill(Qt::transparent);
+
+    QPainter ns_painter(new_sprite);
+    
+    ns_painter.drawPixmap(0, 0, *colored_body);
+    ns_painter.drawPixmap(0, 0, sprite_eyes);
+    ns_painter.end();
+
+    delete colored_body;
+
+    this->ghost_sprites.push_back(new_sprite);
 }
 
 /**
@@ -88,9 +159,8 @@ void Entity::set_next_sprite(entity_direction dir) {
             this->next_sprite_index = (this->next_sprite_index + 1) % PACMAN_SPRITES;
             break;
         case ghost:
-            qDebug() << "[WARN]: set_next_sprite not implemented for ghosts";
+            this->setPixmap(*ghost_sprites[dir]);
             return;
-            break;
     }
 
     this->setPixmap(new_sprite_pixmap);
@@ -130,6 +200,11 @@ bool Entity::would_turn(entity_direction dir) {
             } else {
                 return false;
             }
+        case entity_direction::stopped:
+            break;
+        default:
+            qWarning() << "[ERROR] Neocekavany typ smeru";
+            exit(1);
     }
 
     return false;
@@ -215,6 +290,8 @@ void Entity::move(entity_direction dir) {
             dx = 0;
             dy = 1;
             break;
+        case entity_direction::stopped:
+            return;
     }
     
     //pohyb
