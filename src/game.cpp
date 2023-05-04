@@ -1,4 +1,5 @@
 #include "game.h"
+#include "src/entity.h"
 #include "src/utils.h"
 
 /**
@@ -17,6 +18,7 @@ Game::Game(QString file_name) : QGraphicsScene() {
 */
 void Game::load_map(QString file_name) {
     qDebug() << "[INFO]: Loading map from file:" << file_name;
+    this->ghost_id = 0;
 
     //otevření souboru s mapou
     QFile mapfile(file_name);
@@ -43,6 +45,8 @@ void Game::load_map(QString file_name) {
             QChar character = line.at(line_index);
             line_index++;
             map_item_type item_type;
+            Entity *ghost;
+
             switch(character.toLatin1()) {
                 case 'T':
                     item_type = finish;
@@ -52,7 +56,9 @@ void Game::load_map(QString file_name) {
                     break;
                 case 'G':
                     item_type = road;
-                    //TODO dodělat inicializaci duchů
+                    ghost = new Entity(entity_type::ghost, j * SPRITE_SIZE, i * SPRITE_SIZE, ghost_id);
+                    this->ghosts.push_back(ghost);
+                    this->ghost_id++;
                     break;
                 case 'K':
                     item_type = key;
@@ -100,6 +106,11 @@ void Game::load_map(QString file_name) {
     //nastavení černého pozadí
     this->setBackgroundBrush(Qt::black);
     this->addItem(this->pacman);
+
+    for(unsigned int i = 0; i < this->ghosts.size(); i++)
+    {
+        this->addItem(this->ghosts[i]);
+    }
 }
 
 /**

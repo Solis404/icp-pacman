@@ -1,7 +1,5 @@
 #ifndef GAME_H
 #define GAME_H
-#include "qgraphicsscene.h"
-#include "qobjectdefs.h"
 #include <QGraphicsScene>
 #include <QFile>
 #include <QTextStream>
@@ -10,6 +8,7 @@
 #include <QTimer>
 #include "map_item.h"
 #include "entity.h"
+#include "utils.h"
 
 /**
 @brief Třída reprezentující samotnou hru
@@ -26,8 +25,9 @@ class Game : public QGraphicsScene {
 
     private:
     entity_direction desired_pacman_direction;
+    std::vector<Entity *> ghosts;
+    int ghost_id;
     QTimer* pacman_timer;
-
 
     public:
     //konstruktor, destruktor
@@ -36,6 +36,7 @@ class Game : public QGraphicsScene {
     void load_map(QString file_name);
     void keyPressEvent(QKeyEvent *keyEvent) override;
     void start();
+
     private slots:
     void pacman_handler();
 };
