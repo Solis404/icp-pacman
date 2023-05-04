@@ -1,11 +1,14 @@
 # TODO
-- sehnat všechny textury (Pixmaps)
-- vytvořit robustní načítání mapy (nevybuchne to při špatném vstupu)
-- vytvořit nějaké rozumné načítání mapy, nemít tu cestu přímo zapečenou v souboru
-- hýbání s pacmanem
+### Nutné pro zápočet
+- implementovat pathfinding (další třída, log. reprezentace mapy?)
+- implementovat N duchů (vyřešit textury, ovládání pomocí pathfinding)
+- implementace logování hry a zpětného přehrávání
+- implementace "interaktivních prvků (životy pacmana, počet sesbíraných klíčů, ...)"
 
-## Když bude čas
+### Když bude čas/bude bavit
 - zpracovat obrázky do qrescources, zapéct do executable
+- implementace menu a načítání hry pomocí GUI
+- zrobustnění metody pro načítání mapy (lze rozdělit do více)
 
 # Jak vyvíjet?
 1. Vygenerovat Makefile z project file-u pomocí `qmake pacman.pro`

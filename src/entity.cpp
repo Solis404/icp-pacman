@@ -57,7 +57,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem()
     this->setPos(x, y);
     this->direction = entity_direction::stopped;
     this->next_sprite_index = 0;
-    this->type = type;
+    this->setData(TYPE_DATA_KEY, QVariant(type));
     
     //inicializuje grafickou reprezentaci entity s počátečním sprajtem
     this->setPixmap(QPixmap(pacman_sprite_files[entity_direction::stopped][0]));
@@ -137,7 +137,7 @@ Entity::~Entity() {}
 @brief Getter atributu type
 */
 entity_type Entity::get_type() {
-    return this->type;
+    return static_cast<entity_type>(this->data(TYPE_DATA_KEY).toInt());
 }
 
 /**
@@ -153,7 +153,7 @@ void Entity::set_next_sprite(entity_direction dir) {
         this->next_sprite_index = 0;
     }
 
-    switch(this->type) {
+    switch(this->get_type()) {
         case pacman:
             new_sprite_pixmap.load(pacman_sprite_files[dir][this->next_sprite_index]);
             this->next_sprite_index = (this->next_sprite_index + 1) % PACMAN_SPRITES;
@@ -249,8 +249,8 @@ bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
     }
 
     //kontrola, že v daném směru není zeď
-    Map_item* probe_target = static_cast<Map_item*>(scene->itemAt(probe, QTransform()));    //určitě bude Map_item
-    if(probe_target->type == map_item_type::wall) {
+    Map_item* probe_target = static_cast<Map_item*>(scene->itemAt(probe, QTransform()));
+    if(probe_target != nullptr && probe_target->get_type() == map_item_type::wall) {
         qDebug() << "[INFO]: Entity cannot continue, wall is in the way";
         return false;
     }

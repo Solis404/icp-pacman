@@ -6,6 +6,8 @@
 @brief Konstruktor třídy Game.
 */
 Game::Game(QString file_name) : QGraphicsScene() {
+    this->keys_needed = 0;
+    this->map_representation = Logical_map();
     load_map(file_name);
     this->desired_pacman_direction = entity_direction::stopped;
 
@@ -33,6 +35,8 @@ void Game::load_map(QString file_name) {
     map_height += 2;
     map_width += 2;
 
+    this->map_representation.new_map(map_width, map_height);
+
     qDebug() << "[INFO]: Map dimensions:" << map_height << 'x' << map_width;
 
     //nastavení mapy podle předlohy ze souboru
@@ -50,11 +54,14 @@ void Game::load_map(QString file_name) {
             switch(character.toLatin1()) {
                 case 'T':
                     item_type = finish;
+                    this->map_representation.set_tile(j, i, finish);
                     break;
                 case 'X':
                     item_type = wall;
+                    this->map_representation.set_tile(j, i, wall);
                     break;
                 case 'G':
+                    this->map_representation.set_tile(j, i, road);
                     item_type = road;
                     ghost = new Entity(entity_type::ghost, j * SPRITE_SIZE, i * SPRITE_SIZE, ghost_id);
                     this->ghosts.push_back(ghost);
@@ -62,11 +69,15 @@ void Game::load_map(QString file_name) {
                     break;
                 case 'K':
                     item_type = key;
+                    this->map_representation.set_tile(j, i, key);
+                    this->keys_needed++;
                     break;
                 case '.':
-                    item_type = road;
+                    this->map_representation.set_tile(j, i, road);
+                    continue;
                     break;
                 case 'S':
+                    this->map_representation.set_tile(j, i, map_item_type::start);
                     item_type = map_item_type::start;
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     break;
@@ -85,22 +96,26 @@ void Game::load_map(QString file_name) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(0, i * SPRITE_SIZE);
+        this->map_representation.set_tile(0, i, wall);
     }
     for(unsigned i = 0; i < map_height; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy((map_width - 1) * SPRITE_SIZE, i * SPRITE_SIZE);
+        this->map_representation.set_tile((map_width - 1) , i, wall);
     }
     //pozor! nesmí se překrývat, začíná od 1 a končí dřív
-    for(unsigned i = 1; i < map_height - 1; i++) {
+    for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
         new_item->moveBy(i * SPRITE_SIZE, 0);
+        this->map_representation.set_tile(i , 0, wall);
     }
-    for(unsigned i = 1; i < map_height - 1; i++) {
+    for(unsigned i = 1; i < map_width - 1; i++) {
         new_item = new Map_item(map_item_type::wall);
         this->addItem(new_item);
-        new_item->moveBy(i * SPRITE_SIZE, (map_height - 1) * SPRITE_SIZE);
+        new_item->moveBy(i * SPRITE_SIZE, (map_width - 1) * SPRITE_SIZE);
+        this->map_representation.set_tile(i , (map_width - 1), wall);
     }
 
     //nastavení černého pozadí
@@ -149,16 +164,54 @@ void Game::start() {
     this->pacman_timer->start(PACMAN_MOVEMENT_DELAY);
 }
 
+void Game::stop() {
+    this->pacman_timer->stop();
+}
+
 /**
 @brief Pokusí se pohnout s pacmanem směrem, který chce hráč, pokud nelze.
 Pohne s ním v původním směru
 */
 void Game::pacman_handler() {
+    //zpracování pohybu
     if(pacman->movement_handler(this->desired_pacman_direction, this)) {
         qDebug() << "[INFO]: Succesful desired direction movement";
-        return;
     } else {
         pacman->movement_handler(this->pacman->get_direction(), this);
         qDebug() << "[INFO]: Desired direction movement failed continuing";
+    }
+    //zpracování interakce s okolím
+    pacman_interaction_handler();
+}
+
+/**
+@brief Metoda zajišťující interakci pacnmana s okolím (duchy, klíči, cílem)
+
+*/
+void Game::pacman_interaction_handler() {
+    QList<QGraphicsItem *> collides_with = this->pacman->collidingItems();
+
+    //nalezení objektů, s nimiž by měl pacman interreagovat
+    for (int i = 0; i < collides_with.size(); ++i) {
+        QGraphicsItem* item = collides_with.at(i);
+        int type = item->data(TYPE_DATA_KEY).toInt();
+        switch(type) {
+            case map_item_type::finish:
+                //v případě cíle musí celý pacman být v cíli
+                if(this->keys_needed == 0 && this->pacman->collidesWithItem(item, Qt::ContainsItemShape) == true) {
+                    qDebug() << "[INFO]: Pacman colliding with finish, ending game";
+                    this->stop();
+                }
+                break;
+            case map_item_type::key:
+                qDebug() << "[INFO]: Pacman colliding with key";
+                this->removeItem(item);    //scéna již objekt klíč nevlastní
+                delete item;
+                this->keys_needed--;
+                break;
+            case entity_type::ghost:
+                qDebug() << "[WARN]: Collision with ghosts not implemented yet";
+                break;
+        }
     }
 }

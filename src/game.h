@@ -9,6 +9,7 @@
 #include "map_item.h"
 #include "entity.h"
 #include "utils.h"
+#include "logic_map.h"
 
 /**
 @brief Třída reprezentující samotnou hru
@@ -22,12 +23,15 @@ class Game : public QGraphicsScene {
     unsigned map_height;
     unsigned map_width;
     Entity* pacman;
+    Logical_map map_representation;
+
 
     private:
     entity_direction desired_pacman_direction;
     std::vector<Entity *> ghosts;
     int ghost_id;
     QTimer* pacman_timer;
+    unsigned keys_needed;
 
     public:
     //konstruktor, destruktor
@@ -36,7 +40,8 @@ class Game : public QGraphicsScene {
     void load_map(QString file_name);
     void keyPressEvent(QKeyEvent *keyEvent) override;
     void start();
-
+    void stop();
+    void pacman_interaction_handler();
     private slots:
     void pacman_handler();
 };
