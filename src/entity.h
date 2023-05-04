@@ -18,11 +18,11 @@ class Entity : public QGraphicsPixmapItem{
     public:
     unsigned x;
     unsigned y;
+    std::vector<std::tuple<entity_direction, Map_item*>> backtrack_log;
 
     private:
     entity_direction direction;
     unsigned next_sprite_index;
-    std::vector<std::tuple<entity_direction, Map_item*>> backtrack_log;
     void move(entity_direction dir);
     bool aligned_with_grid();
     bool would_turn(entity_direction dir);

@@ -11,6 +11,7 @@
 #include <QTime>
 #include <QGraphicsSimpleTextItem>
 #include <exception>
+#include <tuple>
 #include "map_item.h"
 #include "entity.h"
 #include "utils.h"
@@ -19,7 +20,7 @@
 //Výčtové typy pro indikaci různých stavů hry/informací o hře
 enum game_result{victory, defeat, log_end, input_file_err};
 enum game_state{init, playing, paused, finished};
-enum game_mode{manual, replay};
+enum game_mode{manual, replay, replay_reverse};
 
 /**
 @brief Třída reprezentující samotnou hru, její logiku a reprezentaci
@@ -36,7 +37,6 @@ class Game : public QGraphicsScene {
     unsigned map_width;
     Entity* pacman;
     Logical_map* map_representation;
-    game_mode mode;
     game_state state;
 
     private:
@@ -52,18 +52,18 @@ class Game : public QGraphicsScene {
     QGraphicsSimpleTextItem* elapsed_time_item;    //zobrazovaný čas
     QGraphicsSimpleTextItem* key_counter;    //zobrazované počítadlo klíčů
 
-    QFile* log_file;    //soubor pro logování
     QString movement_log;    //místo pro uložení logu pohybu
+    QFile* log_file;    //soubor pro logování
 
     public:
     //konstruktor, destruktor
-    Game(game_mode mode, QString input_path, QString log_path = "");
+    Game(QFile& map_file, QString log_path = "");
     ~Game();
 
     void start();
     private:
     void stop(game_result result);
-    void load_input(QString input);
+    void load_map(QFile& map_file);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
 
@@ -83,4 +83,16 @@ class Game : public QGraphicsScene {
     game_result game_over(game_result result);    //signál značící konec hry a její výsledek
 
 };
+
+/**
+Třída pro zpětné přehrávání her
+*/
+class Replay : public Game{
+    public:
+
+    Replay(QFile& log_path);
+    ~Replay();
+
+};
+
 #endif //GAME_H

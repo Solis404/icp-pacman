@@ -9,7 +9,9 @@ int main(int argc, char* argv[]) {
 
     Game* my_game;
     try{
-        my_game = new Game(game_mode::manual, "map.txt");
+        QFile map_file("map.txt");
+        map_file.open(QIODevice::ReadOnly | QIODevice::Text);
+        my_game = new Game(map_file);
     } catch(std::runtime_error& e) {
         qDebug() << e.what();
         return EXIT_FAILURE;

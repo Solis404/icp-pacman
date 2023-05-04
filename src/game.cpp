@@ -1,5 +1,6 @@
 #include "game.h"
 #include "qnamespace.h"
+#include "src/entity.h"
 #include "src/utils.h"
 
 /**
@@ -10,26 +11,25 @@ log u replay režimu)
 k logování nedojde
 @note Může vyhodit vyjímku std::runtime_error v případě neplatných vstupních dat
 */
-Game::Game(game_mode mode, QString input_path, QString log_path) : QGraphicsScene() {
-    this->mode = mode;
+Game::Game(QFile& map_path, QString log_path) : QGraphicsScene() {
     this->state = game_state::init;
     
     this->keys_needed = 0; //nutné inicializovat nyní, v metodě load_input() se k tomu přičítá
-    this->keys_acquired = 0;
 
     //čtení a inicializace mapy
-    qDebug() << "[INFO]: Loading map from file:" << input_path;
-    load_input(input_path);
+    qDebug() << "[INFO]: Loading map from file:" << map_path.fileName();
+    load_map(map_path);
 
-    if(mode == manual && log_path != "") {    //nastavení logování do souboru
+    if(log_path != "") {    //nastavení logování do souboru
         qDebug() << "[INFO]: Saving log file to " << log_path;
-        QFile::copy(input_path, log_path);    //mapa se uloží do logovacího souboru
+        QFile::copy(map_path.fileName(), log_path);    //mapa se uloží do logovacího souboru
         this->log_file = new QFile(log_path);
         this->log_file->open(QIODevice::Text | QIODevice::Append);
     } else {
         qDebug() << "[INFO]: No log path specified, logging disabled";
         this->log_file = nullptr;
-    }
+    }   this->keys_acquired = 0;
+
 
     setup_counters();
 
@@ -83,12 +83,10 @@ void Game::update_key_counter() {
 Inicializuje proměnné spojené s mapu v třídě Game (map_height, map_width, map_representation)
 @note Může vyhodit vyjímku std::runtime_error v případě neplatných vstupních dat
 */
-void Game::load_input(QString input_path) {
+void Game::load_map(QFile& map_file) {
 
     //načtení výšky a šířky mapy
-    QFile input_file = QFile(input_path);
-    input_file.open(QIODevice::ReadOnly | QIODevice::Text);    //otevření souboru pro čtení
-    QTextStream input = QTextStream(&input_file);    //Stream pro čtení
+    QTextStream input = QTextStream(&map_file);    //Stream pro čtení
 
     input >> map_height;
     input >> map_width;
@@ -209,9 +207,9 @@ void Game::load_input(QString input_path) {
     this->setBackgroundBrush(Qt::black);
     this->addItem(this->pacman);
 
-    if(this->mode == game_mode::replay) {    //v případě replaye je poslední řádek log pohybu
-        this->movement_log = input.readLine();
-    }
+    // if(this->mode == game_mode::replay) {    //v případě replaye je poslední řádek log pohybu
+    //     this->movement_log = input.readLine();
+    // }
 }
 
 /**
@@ -220,21 +218,19 @@ void Game::load_input(QString input_path) {
 Nastaví požadovaný směr pacmana od uživatele
 */
 void Game::keyPressEvent(QKeyEvent *keyEvent) {
-    if(this->mode == game_mode::manual) {
-        switch(keyEvent->key()) {
-            case Qt::Key_W:
-                this->desired_pacman_direction = entity_direction::up;
-                break;
-            case Qt::Key_A:
-                this->desired_pacman_direction = entity_direction::left;
-                break;
-            case Qt::Key_S:
-                this->desired_pacman_direction = entity_direction::down;
-                break;
-            case Qt::Key_D:
-                this->desired_pacman_direction = entity_direction::right;
-                break;
-        }
+    switch(keyEvent->key()) {
+        case Qt::Key_W:
+            this->desired_pacman_direction = entity_direction::up;
+            break;
+        case Qt::Key_A:
+            this->desired_pacman_direction = entity_direction::left;
+            break;
+        case Qt::Key_S:
+            this->desired_pacman_direction = entity_direction::down;
+            break;
+        case Qt::Key_D:
+            this->desired_pacman_direction = entity_direction::right;
+            break;
     }
 }
 
@@ -312,23 +308,29 @@ void Game::pacman_handler() {
     }
 
     //nastaví směr pacmana podle logu
-    if(this->mode == game_mode::replay) {
-        this->desired_pacman_direction = get_dir_from_log();
-    }
+    // if(this->mode == game_mode::replay) {
+    //     this->desired_pacman_direction = get_dir_from_log();
+    // } else if(this->mode == game_mode::replay_reverse) {    //backtracking
+    //     if(this->pacman->backtrack_log.size() != 0) {    //zamezení podtečení
+    //         this->desired_pacman_direction = std::get<0>(this->pacman->backtrack_log.back());
+    //     } else {
+    //         this->desired_pacman_direction = stopped;
+    //     }
+    // }
 
     if(this->state != game_state::playing) {
         return;
     }
 
-    bool should_log_backtrack = false;
-    if(this->mode == replay) {
-        should_log_backtrack = true;
-    }
+    // bool should_log_backtrack = false;
+    // if(this->mode == replay) {
+    //     should_log_backtrack = true;
+    // }
     
     //pokusí se pohnout ve vyžadovaném směru, pokud nelze, pokusí se pohnout
     //stejným směrem jako minule
-    if(!pacman->movement_handler(this->desired_pacman_direction, this, should_log_backtrack)) {
-        pacman->movement_handler(this->pacman->get_direction(), this, should_log_backtrack);
+    if(!pacman->movement_handler(this->desired_pacman_direction, this, false)) {
+        pacman->movement_handler(this->pacman->get_direction(), this, false);
     }
     //zpracování interakce s okolím
     pacman_interaction_handler();
@@ -375,3 +377,12 @@ void Game::elapsed_time_handler() {
     this->elapsed_time = this->elapsed_time.addSecs(1);
     this->elapsed_time_item->setText("Time:" + this->elapsed_time.toString("mm:ss"));
 }
+
+/**
+@brief Konstruktor třídy Replay
+*/
+Replay::Replay(QFile& log_path) : Game(log_path) {
+    
+}
+
+Replay::~Replay() {}
