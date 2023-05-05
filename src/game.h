@@ -17,6 +17,21 @@
 #include "utils.h"
 #include "logic_map.h"
 
+class Map_displayer : public QGraphicsScene {
+    public:
+    Map_displayer();
+    ~Map_displayer();
+    void load_static_map_elements(QString map);
+
+    unsigned map_height;
+    unsigned map_width;
+
+    size_t keys_needed;
+    std::vector<Map_item*> keys;
+
+    
+};
+
 //Výčtové typy pro indikaci různých stavů hry/informací o hře
 enum game_result{victory, defeat, log_end, input_file_err};
 enum game_state{init, playing, paused, finished};
@@ -28,32 +43,29 @@ Dědí od QT třídy QGraphicsScene, tudíž v sobě zakomponovává i grafickou
 kterou lze vizualizovat pomocí QGraphicsView. Při její konstrukci dojde k vytvoření
 mapy. Metodou start() se hra spustí a TODO
 */
-class Game : public QGraphicsScene {
+class Game : public Map_displayer {
     Q_OBJECT
     
     public:
-    unsigned map_height;
-    unsigned map_width;
-    Entity* pacman;
     Logical_map* map_representation;
     game_state state;
 
     private:
     entity_direction desired_pacman_direction;
 
+    size_t keys_acquired; 
+
     QTimer* movement_timer;
     QTimer* play_timer;
     QTime elapsed_time;
 
-    size_t keys_acquired; 
-    size_t keys_needed;
+    Entity* pacman;
 
     QGraphicsSimpleTextItem* elapsed_time_item;    //zobrazovaný čas
     QGraphicsSimpleTextItem* key_counter;    //zobrazované počítadlo klíčů
 
     QFile* log_file;    //soubor pro logování
     QXmlStreamWriter* xml_writer;    //stream writer vypisující log
-    std::vector<Map_item*> keys;
 
     public:
     //konstruktor, destruktor
@@ -63,7 +75,7 @@ class Game : public QGraphicsScene {
     void start();
     private:
     void stop(game_result result);
-    void load_map(QString map_string);
+    void load_dynamic_map_elements(QString map_string);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
 
