@@ -8,4 +8,4 @@ CONFIG += debug
 
 TARGET = pacman
 
-QT += widgets
+QT += core widgets xml

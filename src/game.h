@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QGraphicsSimpleTextItem>
+#include <QXmlStreamWriter>
 #include <exception>
 #include "map_item.h"
 #include "entity.h"
@@ -19,7 +20,6 @@
 //Výčtové typy pro indikaci různých stavů hry/informací o hře
 enum game_result{victory, defeat, log_end, input_file_err};
 enum game_state{init, playing, paused, finished};
-enum game_mode{manual, replay};
 
 /**
 @brief Třída reprezentující samotnou hru, její logiku a reprezentaci
@@ -36,7 +36,6 @@ class Game : public QGraphicsScene {
     unsigned map_width;
     Entity* pacman;
     Logical_map* map_representation;
-    game_mode mode;
     game_state state;
 
     private:
@@ -53,17 +52,17 @@ class Game : public QGraphicsScene {
     QGraphicsSimpleTextItem* key_counter;    //zobrazované počítadlo klíčů
 
     QFile* log_file;    //soubor pro logování
-    QString movement_log;    //místo pro uložení logu pohybu
+    QXmlStreamWriter* xml_writer;    //stream writer vypisující log
 
     public:
     //konstruktor, destruktor
-    Game(game_mode mode, QString input_path, QString log_path = "");
+    Game(QString map_path, QString log_path = "");
     ~Game();
 
     void start();
     private:
     void stop(game_result result);
-    void load_input(QString input);
+    void load_map(QString map_string);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
 
@@ -73,7 +72,6 @@ class Game : public QGraphicsScene {
     void setup_counters();
     void setup_key_counter();
     void update_key_counter();
-    entity_direction get_dir_from_log();
 
     private slots:
     void elapsed_time_handler();

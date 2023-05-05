@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 
     Game* my_game;
     try{
-        my_game = new Game(game_mode::manual, "map.txt");
+        my_game = new Game("map.txt");
     } catch(std::runtime_error& e) {
         qDebug() << e.what();
         return EXIT_FAILURE;
