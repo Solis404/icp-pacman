@@ -41,7 +41,7 @@ class Game : public QGraphicsScene {
     private:
     entity_direction desired_pacman_direction;
 
-    QTimer* pacman_timer;
+    QTimer* movement_timer;
     QTimer* play_timer;
     QTime elapsed_time;
 
@@ -76,6 +76,7 @@ class Game : public QGraphicsScene {
     private slots:
     void elapsed_time_handler();
     void pacman_handler();
+    void logging_handler();
 
     signals:
     game_result game_over(game_result result);    //signál značící konec hry a její výsledek

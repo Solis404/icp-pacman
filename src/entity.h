@@ -16,6 +16,7 @@ class Entity : public QGraphicsPixmapItem{
     public:
     unsigned x;
     unsigned y;
+    QString current_pixmap_path;
 
     private:
     entity_direction direction;

@@ -36,6 +36,9 @@ Game::Game(QString map_path, QString log_path) : QGraphicsScene() {
         xml_writer->writeStartElement("map");
         xml_writer->writeCharacters(map);
         xml_writer->writeEndElement();    //map
+
+        //začátek zapisování stavů
+        xml_writer->writeStartElement("states");
     } else {
         qDebug() << "[INFO]: No log path specified, logging disabled";
         this->log_file = nullptr;
@@ -48,8 +51,11 @@ Game::Game(QString map_path, QString log_path) : QGraphicsScene() {
     connect(this->play_timer, SIGNAL(timeout()), this, SLOT(elapsed_time_handler()));
 
     this->desired_pacman_direction = entity_direction::stopped;
-    this->pacman_timer = new QTimer(this);
-    connect(pacman_timer, SIGNAL(timeout()), this, SLOT(pacman_handler()));
+    this->movement_timer = new QTimer(this);
+    connect(movement_timer, SIGNAL(timeout()), this, SLOT(pacman_handler()));
+    if(log_path != "") {
+        connect(movement_timer, SIGNAL(timeout()), this, SLOT(logging_handler()));
+    }
 }
 
 /**
@@ -261,7 +267,7 @@ Game::~Game() {
 Spustí časovače, aby hra reagovala na vstup
 */
 void Game::start() {
-    this->pacman_timer->start(PACMAN_MOVEMENT_DELAY);
+    this->movement_timer->start(PACMAN_MOVEMENT_DELAY);
     this->play_timer->start(1000);    //interval 1s
     this->state = game_state::playing;
 }
@@ -272,7 +278,7 @@ void Game::start() {
 Emituje signál game_over
 */
 void Game::stop(game_result result) {
-    this->pacman_timer->stop();
+    this->movement_timer->stop();
     this->play_timer->stop();
     this->state = game_state::finished;
     emit game_over(result);
@@ -369,4 +375,24 @@ Zvýší interní hodnotu času o 1s a updatuje item, který ukazuje čas
 void Game::elapsed_time_handler() {
     this->elapsed_time = this->elapsed_time.addSecs(1);
     this->elapsed_time_item->setText("Time:" + this->elapsed_time.toString("mm:ss"));
+}
+
+/**
+@brief Handler logování informací
+
+Loguje se:
+    - pozice a sprite pacmana
+    - pozice klíčů
+*/
+void Game::logging_handler() {
+    this->xml_writer->writeStartElement("state");
+
+    //výpis informací o pacmanovi
+    this->xml_writer->writeStartElement("pacman");
+    this->xml_writer->writeAttribute("x", QString::number(this->pacman->x));
+    this->xml_writer->writeAttribute("y", QString::number(this->pacman->x));
+    this->xml_writer->writeAttribute("sprite", this->pacman->current_pixmap_path);
+    this->xml_writer->writeEndElement();
+
+    this->xml_writer->writeEndElement();
 }

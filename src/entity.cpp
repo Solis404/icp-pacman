@@ -50,6 +50,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem()
     switch (type) {
         case pacman:
             this->setPixmap(QPixmap(pacman_sprite_files[entity_direction::stopped][0]));
+            this->current_pixmap_path = pacman_sprite_files[entity_direction::stopped][0];
             break;
         case ghost:
             qWarning() << "[WARN]: Ghost not implemented yet!";
@@ -85,6 +86,7 @@ void Entity::set_next_sprite(entity_direction dir) {
     switch(this->get_type()) {
         case pacman:
             new_sprite_pixmap.load(pacman_sprite_files[dir][this->next_sprite_index]);
+            this->current_pixmap_path = pacman_sprite_files[dir][this->next_sprite_index];
             this->next_sprite_index = (this->next_sprite_index + 1) % PACMAN_SPRITES;
             break;
         case ghost:
