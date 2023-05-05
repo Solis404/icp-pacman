@@ -155,6 +155,7 @@ Game::Game(QString map_path, QString log_path) : Map_displayer() {
         xml_writer->writeStartDocument();
 
         //zapsání mapy do xml dokumentu
+        xml_writer->writeStartElement("pacman_log");
         xml_writer->writeStartElement("map");
         xml_writer->writeCharacters(map);
         xml_writer->writeEndElement();    //map
