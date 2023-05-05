@@ -183,6 +183,10 @@ void Game::load_map(QString map_string) {
             this->addItem(new_item);    //scéna přebírá vlastnictví, nevolám destruktor
             //pohyb s položkou na příslušné místo
             new_item->moveBy(j * SPRITE_SIZE, i * SPRITE_SIZE);
+
+            if(item_type == key) {    //pokud je nová položka klíč, přidá se do vektoru klíčů
+                this->keys.push_back(new_item);
+            }
         }
     }
 
@@ -390,9 +394,27 @@ void Game::logging_handler() {
     //výpis informací o pacmanovi
     this->xml_writer->writeStartElement("pacman");
     this->xml_writer->writeAttribute("x", QString::number(this->pacman->x));
-    this->xml_writer->writeAttribute("y", QString::number(this->pacman->x));
+    this->xml_writer->writeAttribute("y", QString::number(this->pacman->y));
     this->xml_writer->writeAttribute("sprite", this->pacman->current_pixmap_path);
     this->xml_writer->writeEndElement();
 
-    this->xml_writer->writeEndElement();
+    //výpis informací o klíčích
+    this->xml_writer->writeStartElement("keys");
+
+    //vypíše informace o každém viditelném klíči do logu
+    for(size_t i = 0; i < this->keys.size(); i++) {
+        if(this->keys.at(i)->isVisible()) {
+            this->xml_writer->writeStartElement("key");
+
+            this->xml_writer->writeAttribute("x", QString::number(this->keys.at(i)->scenePos().x()));
+            this->xml_writer->writeAttribute("y", QString::number(this->keys.at(i)->scenePos().y()));
+
+            this->xml_writer->writeEndElement();    //key
+        }
+    }
+
+    this->xml_writer->writeEndElement();    //keys
+    
+
+    this->xml_writer->writeEndElement();    //state
 }

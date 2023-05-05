@@ -53,6 +53,7 @@ class Game : public QGraphicsScene {
 
     QFile* log_file;    //soubor pro logování
     QXmlStreamWriter* xml_writer;    //stream writer vypisující log
+    std::vector<Map_item*> keys;
 
     public:
     //konstruktor, destruktor
