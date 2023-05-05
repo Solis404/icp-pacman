@@ -11,12 +11,16 @@
 #include <QTime>
 #include <QGraphicsSimpleTextItem>
 #include <QXmlStreamWriter>
+#include <QDomDocument>
 #include <exception>
 #include "map_item.h"
 #include "entity.h"
 #include "utils.h"
 #include "logic_map.h"
 
+/**
+Třída, uchovávající společné elementy Hry samotné a Replaye
+*/
 class Map_displayer : public QGraphicsScene {
     public:
     Map_displayer();
@@ -28,8 +32,6 @@ class Map_displayer : public QGraphicsScene {
 
     size_t keys_needed;
     std::vector<Map_item*> keys;
-
-    
 };
 
 //Výčtové typy pro indikaci různých stavů hry/informací o hře
@@ -95,4 +97,16 @@ class Game : public Map_displayer {
     game_result game_over(game_result result);    //signál značící konec hry a její výsledek
 
 };
+
+/**
+@brief Třída pro zobrazování replaye hry
+*/
+class Replay : public Map_displayer {
+    public:
+    Replay(QString log_path);
+    ~Replay();
+    QDomDocument xml_doc;
+};
+
 #endif //GAME_H
+

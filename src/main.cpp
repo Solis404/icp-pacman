@@ -7,15 +7,16 @@
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
-    Game* my_game;
+    // Game* my_game;
+    Replay* my_game;
     try{
-        my_game = new Game("map.txt", "logfile.xml");
+        my_game = new Replay("logfile.xml");
     } catch(std::runtime_error& e) {
         qDebug() << e.what();
         return EXIT_FAILURE;
     }
 
-    my_game->start();
+    // my_game->start();
 
     QGraphicsView view(my_game);
     view.show();

@@ -454,3 +454,37 @@ void Game::logging_handler() {
 
     this->xml_writer->writeEndElement();    //state
 }
+
+/**
+@brief Konstruktor třídy Replay, vytvoří hru z logu
+@param QString log_path - Cesta k souboru s logem
+
+Načte statické elementy z logu
+
+@note Při neúspěchu (soubor neexistuje, nevalidní xml) vyhazuje vyjímku std::runtime_error
+*/
+Replay::Replay(QString log_path) : Map_displayer() {
+
+    qDebug() << "[INFO]: Loading log from file:" << log_path;
+    QFile map_file(log_path);
+    map_file.open(QIODevice::ReadOnly);    //otevření souboru pro čtení
+
+    this->xml_doc = QDomDocument();
+    QString err_msg; int err_line; int err_col;
+    if(this->xml_doc.setContent(&map_file, &err_msg, &err_line, &err_col) == false) {    //selhalo parsování dokumentu
+        qDebug() << "[ERR]: Parser:" << err_msg << " at line:" << err_line << " at col:" << err_col;
+        throw std::runtime_error("Parsing of log failed");
+    }
+
+    QDomElement map_element = xml_doc.elementsByTagName("map").at(0).toElement();
+    if(map_element.isNull()) {
+        throw std::runtime_error("Failed to find map in log");
+    }
+
+    this->load_static_map_elements(map_element.text());
+}
+
+/**
+@brief Destruktor třídy Replay
+*/
+Replay::~Replay() {}
