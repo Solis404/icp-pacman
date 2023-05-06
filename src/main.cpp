@@ -11,6 +11,8 @@ int main(int argc, char* argv[]) {
     Replay* my_game;
     try{
         my_game = new Replay("logfile.xml");
+        // my_game = new Game("map.txt", "logfile.xml");
+
     } catch(std::runtime_error& e) {
         qDebug() << e.what();
         return EXIT_FAILURE;

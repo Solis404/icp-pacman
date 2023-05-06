@@ -120,6 +120,8 @@ class Replay : public Map_displayer {
 
     void display_step(QDomElement& step);
     void handle_key_change(QDomElement& keys);
+    Map_item* find_surplus_key(std::vector<Map_item*>& visible_keys, QDomElement& log_keys);
+    Map_item* find_missing_key(std::vector<Map_item*>& visible_keys, QDomElement& log_keys);
     void initialize_entities();
     void start();
 

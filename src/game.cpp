@@ -525,23 +525,91 @@ void Replay::initialize_entities() {
 
 /**
 @brief Metoda, která zajistí změnu klíčů (schování/odkrytí), pokud je třeba
+@param QDomElement& keys - Parent element klíčů z xml logu
 */
 void Replay::handle_key_change(QDomElement& keys) {
-
-    size_t num_of_visible_keys = 0;
+    std::vector<Map_item*> visible_keys;
     for(Map_item* key : this->keys) {
-        if(key->isVisible()) num_of_visible_keys++;
+        if(key->isVisible()) {
+            visible_keys.push_back(key);
+        }
     }
 
     size_t num_of_keys_in_log = static_cast<size_t>(keys.childNodes().size()); 
-    if(num_of_visible_keys == num_of_keys_in_log) {
+    if(visible_keys.size()  == num_of_keys_in_log) {
         return;
-    } else if(num_of_visible_keys > num_of_keys_in_log) {    //musíme zakrýt klíč
-        qDebug() << "[INFO]: Should hide key";
-    } else if(num_of_visible_keys < num_of_keys_in_log) {    //musíme odkrýt klíč
-        qDebug() << "[INFO]: Should uncover key";
+    } else if(visible_keys.size() > num_of_keys_in_log) {    //musíme zakrýt klíč
+        find_surplus_key(visible_keys, keys)->hide();
+    } else if(visible_keys.size() < num_of_keys_in_log) {    //musíme odkrýt klíč
+        find_missing_key(visible_keys, keys)->show();
     }
-    
+}
+
+/**
+@brief Funkce pro nalezení klíče, který se vyskytuje ve visible keys a zároveň se nevyskytuje v log_keys
+@param std::vector<Map_item *>& visible_keys - vektor viditelných klíčů
+@param QDomElement& log_keys - Element obsahující klíče z logu
+@return Vrací ukazatel na přebytečný klíč
+*/
+Map_item* Replay::find_surplus_key(std::vector<Map_item *>& visible_keys, QDomElement& log_keys) {
+    //iterace přes všechny viditelné klíče
+    for(Map_item* key_on_screen : visible_keys) {
+        QDomElement key_from_log = log_keys.firstChildElement();
+        bool found_match = false;
+
+        //iterace přes všechny klíče v logu
+        while(!key_from_log.isNull() && !found_match) {
+            QPointF log_key_pos(key_from_log.attribute("x").toInt(), key_from_log.attribute("y").toInt());
+            if(log_key_pos == key_on_screen->pos()) {
+                found_match = true;
+            }
+            key_from_log = key_from_log.nextSiblingElement();
+        }
+
+        if(!found_match) {    //našli jsme přebývající klíč
+            return key_on_screen;
+        }
+    }
+
+    return nullptr;
+}
+
+/**
+@brief Funkce pro nalezení klíče, který se vyskytuje v log keys a zároveň se nevyskytuje ve visible_keys
+@param std::vector<Map_item *>& visible_keys - vektor viditelných klíčů
+@param QDomElement& log_keys - Element obsahující klíče z logu
+@return Vrací ukazatel na klíč, který chybí ve visible_keys
+*/
+Map_item* Replay::find_missing_key(std::vector<Map_item *>& visible_keys, QDomElement& log_keys) {
+    //iterace přes všechny klíče z logu
+    QPointF missing_key_pos;
+    QDomElement key_from_log = log_keys.firstChildElement();
+    while(!key_from_log.isNull()) {
+        QPointF log_key_pos(key_from_log.attribute("x").toInt(), key_from_log.attribute("y").toInt());
+        bool found_match = false;
+
+        //iterace přes všechny viditelné klíče
+        for(Map_item* key_on_screen : visible_keys) {
+            if(log_key_pos == key_on_screen->pos()) {
+                found_match = true;
+            }
+        }
+
+        if(!found_match) {    //našli jsme klíč v logu, který není mezi viditelnými klíči
+            missing_key_pos = log_key_pos;
+        }
+
+        key_from_log = key_from_log.nextSiblingElement();
+    }
+
+    //ještě musíme najít, který klíč je skrytý
+    for(Map_item* key : this->keys) {
+        if(key->pos() == missing_key_pos) {
+            return key;
+        }
+    }
+
+    return nullptr;
 }
 
 /**
@@ -579,6 +647,8 @@ void Replay::start() {
 
 Pokud se dostane na konec logu, zastaví se. Pokud by se při backtrackingu dostal na začátek,
 vypíše o tom informaci a nedělá nic
+
+Provádí detekci konce (začátku) hry - TODO
 */
 void Replay::step_handler() {
     QDomElement next_state;
