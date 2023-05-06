@@ -102,10 +102,31 @@ class Game : public Map_displayer {
 @brief Třída pro zobrazování replaye hry
 */
 class Replay : public Map_displayer {
+
+    Q_OBJECT
+    
     public:
     Replay(QString log_path);
     ~Replay();
+
+    QGraphicsPixmapItem* pacman;
+    // std::vector<QGraphicsPixmapItem*> ghosts;
+
+    QTimer* step_timer;
+    bool backtracking;
+
     QDomDocument xml_doc;
+    QDomElement current_state;
+
+    void display_step(QDomElement& step);
+    void handle_key_change(QDomElement& keys);
+    void initialize_entities();
+    void start();
+
+    void keyPressEvent(QKeyEvent *keyEvent) override;
+
+    private slots:
+    void step_handler();
 };
 
 #endif //GAME_H

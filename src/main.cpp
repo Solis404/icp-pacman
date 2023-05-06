@@ -16,7 +16,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // my_game->start();
+    my_game->initialize_entities();
+    my_game->start();
 
     QGraphicsView view(my_game);
     view.show();

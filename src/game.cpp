@@ -469,19 +469,153 @@ Replay::Replay(QString log_path) : Map_displayer() {
     QFile map_file(log_path);
     map_file.open(QIODevice::ReadOnly);    //otevření souboru pro čtení
 
+    //načtení xml logu a vytvoření dokumentu
     this->xml_doc = QDomDocument();
     QString err_msg; int err_line; int err_col;
     if(this->xml_doc.setContent(&map_file, &err_msg, &err_line, &err_col) == false) {    //selhalo parsování dokumentu
         qDebug() << "[ERR]: Parser:" << err_msg << " at line:" << err_line << " at col:" << err_col;
-        throw std::runtime_error("Parsing of log failed");
+        throw std::runtime_error("[ERR]: Parsing of log failed");
     }
 
-    QDomElement map_element = xml_doc.elementsByTagName("map").at(0).toElement();
+    //načtení mapy z logu
+    QDomElement map_element = xml_doc.firstChildElement();
     if(map_element.isNull()) {
-        throw std::runtime_error("Failed to find map in log");
+        throw std::runtime_error("[ERR]: Failed to find map in log");
     }
 
     this->load_static_map_elements(map_element.text());
+
+    this->pacman = nullptr;
+    this->backtracking = false;
+    this->step_timer = new QTimer(this);
+}
+
+/**
+@brief Inicializuje entity (pacmana a duchy) TODO(duchové)
+
+
+Načte z prvního kroku pozici pacmana a duchů a zařadí je do scény. Inicializuje také
+atribut states.
+*/
+void Replay::initialize_entities() {
+    QDomElement states = this->xml_doc.elementsByTagName("states").at(0).toElement();
+    if(states.isNull()) {
+        throw std::runtime_error("[ERR]: States not found in log");
+    }
+
+    QDomElement first_step = states.firstChildElement();
+    QDomNodeList step_items = first_step.childNodes(); 
+
+    //načtení elementů prvního kroku
+    QDomElement pacman = step_items.at(0).toElement();
+    QDomElement keys = step_items.at(1).toElement();
+    if(pacman.isNull() || keys.isNull()) {    //kontrola existence elementů
+        throw std::runtime_error("[ERR]: Missing element in state");
+    }
+
+    //nastavení pacmana
+    this->pacman = this->addPixmap(QPixmap(pacman.attribute("sprite")));
+    QPointF pacman_pos(pacman.attribute("x").toInt(), pacman.attribute("y").toInt());
+    this->pacman->setPos(pacman_pos);
+
+    this->current_state = first_step;
+
+    //TODO duchové
+}
+
+/**
+@brief Metoda, která zajistí změnu klíčů (schování/odkrytí), pokud je třeba
+*/
+void Replay::handle_key_change(QDomElement& keys) {
+
+    size_t num_of_visible_keys = 0;
+    for(Map_item* key : this->keys) {
+        if(key->isVisible()) num_of_visible_keys++;
+    }
+
+    size_t num_of_keys_in_log = static_cast<size_t>(keys.childNodes().size()); 
+    if(num_of_visible_keys == num_of_keys_in_log) {
+        return;
+    } else if(num_of_visible_keys > num_of_keys_in_log) {    //musíme zakrýt klíč
+        qDebug() << "[INFO]: Should hide key";
+    } else if(num_of_visible_keys < num_of_keys_in_log) {    //musíme odkrýt klíč
+        qDebug() << "[INFO]: Should uncover key";
+    }
+    
+}
+
+/**
+@brief Metoda pro zobrazení kroku na mapě
+@param QDomNode step - Krok z xml logu, který se má zobrazit
+*/
+void Replay::display_step(QDomElement& step) {
+    QDomNodeList step_items = step.childNodes(); 
+
+    //načtení elementů kroku
+    QDomElement pacman = step_items.at(0).toElement();
+    QDomElement keys = step_items.at(1).toElement();
+
+    if(pacman.isNull() || keys.isNull()) {    //kontrola existence elementů
+        throw std::runtime_error("[ERR]: Missing element in state");
+    }
+
+    //nastavení pozice a sprajtu pacmana
+    QPointF new_pacman_pos(pacman.attribute("x").toInt(), pacman.attribute("y").toInt());
+    QString new_pacman_sprite_path = pacman.attribute("sprite");
+    this->pacman->setPos(new_pacman_pos);
+    this->pacman->setPixmap(QPixmap(new_pacman_sprite_path));
+
+    //zpracuj změnu klíčů
+    handle_key_change(keys);
+}
+
+void Replay::start() {
+    connect(this->step_timer, SIGNAL(timeout()), this, SLOT(step_handler()));
+    this->step_timer->start(REPLAY_MOVEMENT_DELAY);
+}
+
+/**
+@brief Metoda pro nastavení dalšího kroku a jeho zobrazení
+
+Pokud se dostane na konec logu, zastaví se. Pokud by se při backtrackingu dostal na začátek,
+vypíše o tom informaci a nedělá nic
+*/
+void Replay::step_handler() {
+    QDomElement next_state;
+    if(this->backtracking == false) {
+        next_state = this->current_state.nextSiblingElement();
+    } else {    //backtracking
+        next_state = this->current_state.previousSiblingElement();
+    }
+
+    if(next_state.isNull()) {
+        if(this->backtracking == false) {
+            qDebug() << "[INFO]: Log is at end";
+            this->step_timer->stop();
+            return;
+        } else {
+            qDebug() << "[INFO]: Log can't continue, hit start";
+            return;
+        }
+    } else {
+        this->current_state = next_state;
+    }
+
+    display_step(this->current_state);
+}
+
+/**
+@brief Přepsaný handler pro stisk kláves
+
+Stisknutím klávesy R se přepne režim pohybu - pokud byl aktivní backtracking, bude se pohybovat vpřed,
+a naopak.
+*/
+void Replay::keyPressEvent(QKeyEvent *keyEvent) {
+    switch(keyEvent->key()) {
+        case Qt::Key_R:
+            this->backtracking = !this->backtracking;
+            break;
+    }
 }
 
 /**
