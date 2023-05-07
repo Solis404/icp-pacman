@@ -1,7 +1,13 @@
 #include "game.h"
 #include "qnamespace.h"
+#include "qobject.h"
+#include "src/entity.h"
 #include "src/utils.h"
-
+#include <algorithm>
+#include <cmath>
+#include <ostream>
+#include <utility>
+#include <vector>
 
 Map_displayer::Map_displayer() : QGraphicsScene() {
     this->keys_needed = 0;
@@ -53,6 +59,7 @@ void Map_displayer::load_static_map_elements(QString map) {
             QChar character = line.at(line_index);
             line_index++;
             map_item_type item_type;
+
             switch(character.toLatin1()) {
                 case 'T':
                     item_type = finish;
@@ -179,6 +186,13 @@ Game::Game(QString map_path, QString log_path) : Map_displayer() {
     if(log_path != "") {
         connect(movement_timer, SIGNAL(timeout()), this, SLOT(logging_handler()));
     }
+
+    for(uint i = 0; i < this->ghosts.size(); i++)
+    {
+        QTimer *g_timer = new QTimer(this);
+        connect(g_timer, SIGNAL(timeout()), this, SLOT(ghost_handler()));
+        this->ghost_timers.push_back(g_timer);
+    }
 }
 
 /**
@@ -228,7 +242,8 @@ void Game::load_dynamic_map_elements(QString map_string) {
     QTextStream input = QTextStream(&map_string);    //Stream pro čtení
     input.readLine();    //zahodí první řádek (velikost mapy)
 
-    this->map_representation = new Logical_map(map_width, map_height);
+    this->map_representation = new Logic_map(map_width, map_height);
+    Entity *ghost;
 
     //nastavení mapy podle předlohy ze souboru
     //čtení každého řádku
@@ -247,7 +262,9 @@ void Game::load_dynamic_map_elements(QString map_string) {
                     break;
                 case 'G':
                     this->map_representation->set_tile(j, i, road);
-                    //TODO: přidat do vektoru duchů
+                    ghost = new Entity(entity_type::ghost, j * SPRITE_SIZE, i * SPRITE_SIZE, ghost_id);
+                    this->ghosts.push_back(ghost);
+                    this->ghost_id++;
                     break;
                 case 'K':
                     this->map_representation->set_tile(j, i, key);
@@ -261,6 +278,12 @@ void Game::load_dynamic_map_elements(QString map_string) {
                     this->addItem(this->pacman);
                     break;
                 }
+        }
+        this->addItem(this->pacman);
+
+        for(uint i = 0; i < this->ghosts.size(); i++)
+        {
+            this->addItem(this->ghosts[i]);
         }
     }
 }
@@ -310,6 +333,13 @@ void Game::start() {
     this->movement_timer->start(PACMAN_MOVEMENT_DELAY);
     this->play_timer->start(1000);    //interval 1s
     this->state = game_state::playing;
+
+    int GHOST_MOVEMENT_DELAY = PACMAN_MOVEMENT_DELAY*100;
+    for(uint i = 0; i < this->ghost_timers.size(); i++)
+    {
+        this->ghost_timers[i]->start(GHOST_MOVEMENT_DELAY);
+        GHOST_MOVEMENT_DELAY *= 2;
+    }
 }
 
 /**
@@ -324,44 +354,11 @@ void Game::stop(game_result result) {
     emit game_over(result);
 }
 
-// entity_direction Game::get_dir_from_log() {
-//     if(this->movement_log.size() == 0) {    //kontrola konce logu
-//         qDebug() << "[INFO]: Reached end of log, ending game";
-//         this->stop(game_result::log_end);
-//     }
-
-//     bool ok;
-//     int dir = (QString() + this->movement_log.at(0)).toInt(&ok);
-//     if(!ok) {    //znak nebylo možné převést na číslo
-//         qDebug() << "[INFO]: Malformed log, ending game";
-//         this->stop(game_result::input_file_err);
-//     }
-
-//     switch(dir) {
-//         case entity_direction::stopped:
-//         case entity_direction::right:
-//         case entity_direction::left:
-//         case entity_direction::up:
-//         case entity_direction::down:
-//             break;
-//         default:    //dir není platný směr
-//             qDebug() << "[INFO]: Malformed log, ending game";
-//             this->stop(game_result::input_file_err);
-//     }
-//     this->movement_log.remove(0, 1);
-//     return static_cast<entity_direction>(dir);
-// }
-
 /**
 @brief Pokusí se pohnout s pacmanem směrem, který chce hráč, pokud nelze.
 Pohne s ním v původním směru
 */
 void Game::pacman_handler() {
-    //zapíše právě chtěný pohyb pacmana do řetězce pro logování, funkční pouze v manuálním režimu
-    // if(this->log_file != nullptr) {
-    //     this->movement_log.append(QString::number(this->desired_pacman_direction));
-    // }
-
     if(this->state != game_state::playing) {
         return;
     }
@@ -371,6 +368,7 @@ void Game::pacman_handler() {
     if(!pacman->movement_handler(this->desired_pacman_direction, this)) {
         pacman->movement_handler(this->pacman->get_direction(), this);
     }
+
     //zpracování interakce s okolím
     pacman_interaction_handler();
 }
@@ -401,7 +399,7 @@ void Game::pacman_interaction_handler() {
                 this->update_key_counter();
                 break;
             case entity_type::ghost:
-                qDebug() << "[WARN]: Collision with ghosts not implemented yet";
+                /* qDebug() << "[WARN]: Collision with ghosts not implemented yet"; */
                 break;
         }
     }
@@ -692,3 +690,220 @@ void Replay::keyPressEvent(QKeyEvent *keyEvent) {
 @brief Destruktor třídy Replay
 */
 Replay::~Replay() {}
+
+int calc_fcost(Cords a, Cords b, int gcost)
+{
+    return 10*(std::abs(a.first - b.first) + std::abs(a.second - b.second)) + gcost;
+}
+
+void expand_node(std::vector<Path_node> *path_nodes, Cords goal_cords,Cords expanded_cords, Cords parent_cords, int gcost)
+{
+        int new_fcost = calc_fcost(expanded_cords, goal_cords, gcost);
+
+        for (auto i : (*path_nodes))
+        {
+            if(i.get_cords() == expanded_cords)
+            {
+                if(new_fcost > i.get_fcost())
+                {
+                    return;
+                }
+
+                auto i_it = std::find(path_nodes->begin(), path_nodes->end(), i);
+                path_nodes->erase(i_it);
+
+                break;
+            }
+        }
+        Path_node new_node(expanded_cords, parent_cords, new_fcost);
+        path_nodes->push_back(new_node);
+}
+
+std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_nodes, Cords last_cords)
+{
+    static std::vector<entity_direction> final_direction;
+    bool found = false;
+    Cords parent_cords;
+
+    for(auto i:checked_nodes)
+    {
+        if(last_cords == i.get_cords())
+        {
+            found = true;
+            parent_cords = i.get_parent_cords();
+        }
+    }
+
+    if(not found)
+    {
+        qWarning() << "[ERROR] node not found in checked node" << Qt::endl;
+        return std::vector<entity_direction>(); //return empty vector
+    }
+
+    if(parent_cords == Cords(-1, -1))
+    {
+        auto ret = final_direction;
+        final_direction.clear();
+
+        return ret;
+    }
+
+    if(((parent_cords.first - last_cords.first) == -1) && ((parent_cords.second-last_cords.second) == 0))
+    {
+        //right
+        final_direction.push_back(entity_direction::right);
+    }
+    else if (((parent_cords.first - last_cords.first) == 1) && ((parent_cords.second-last_cords.second) == 0))
+    {
+        //left
+        final_direction.push_back(entity_direction::left);
+    }
+    else if (((parent_cords.first - last_cords.first) == 0) && ((parent_cords.second-last_cords.second) == -1))
+    {
+        //down
+        final_direction.push_back(entity_direction::down);
+    }
+    else if (((parent_cords.first - last_cords.first) == 0) && ((parent_cords.second-last_cords.second) == 1))
+    {
+        //up
+        final_direction.push_back(entity_direction::up);
+    }
+    else
+    {
+        qWarning() << "[ERROR] unknown cord direction" << Qt::endl;
+    }
+    
+    return get_final_path(checked_nodes, parent_cords);
+}
+
+bool in_checked_nodes(std::vector<Path_node> checked_nodes, Cords node_cords)
+{
+    for(auto i: checked_nodes)
+    {
+        if(i.get_cords() == node_cords)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Game::expandable(Cords c, std::vector<Path_node> checked_nodes)
+{
+    bool in_ch_nodes = in_checked_nodes(checked_nodes, Cords(c.first, c.second));
+    if((this->map_representation->get_tile(c.first, c.second) != map_item_type::wall) && (not in_ch_nodes))
+    {
+        return true;
+    }
+    return false;
+}
+
+std::vector<entity_direction> Game::ghost_pathfind(std::vector<Path_node> *path_nodes, Cords end_cords)
+{
+    std::sort(path_nodes->begin(), path_nodes->end());
+    std::vector<Path_node>::iterator node_it = path_nodes->begin();
+    static std::vector<Path_node> checked_nodes;
+    static int gcost = 1;
+    Cords c;
+
+    if(node_it == path_nodes->end())
+    {
+        // empty set
+        gcost = 1;
+        checked_nodes.clear();
+        qWarning() << "Ghost unable to find a path to pacman" << Qt::endl;
+        return std::vector<entity_direction> {entity_direction::stopped};
+    }
+
+    auto cords = (*node_it).get_cords();
+    checked_nodes.push_back(*node_it);
+    path_nodes->erase(node_it);
+
+    if(cords == end_cords)
+    {
+        gcost = 1;
+        auto ret = get_final_path(checked_nodes, end_cords); 
+        checked_nodes.clear();
+
+        std::reverse(ret.begin(), ret.end());
+
+        return ret;
+    }
+
+    c = Cords(cords.first, cords.second+1); 
+    if(expandable(c, checked_nodes))
+    {
+        expand_node(path_nodes, end_cords, c, cords, gcost);
+    }
+
+    c = Cords(cords.first+1, cords.second); 
+    if(expandable(c, checked_nodes))
+    {
+        expand_node(path_nodes, end_cords, c, cords, gcost);
+    }
+
+    c = Cords(cords.first-1, cords.second); 
+    if(expandable(c, checked_nodes))
+    {
+        expand_node(path_nodes, end_cords, c, cords, gcost);
+    }
+
+    c = Cords(cords.first, cords.second-1); 
+    if(expandable(c, checked_nodes))
+    {
+        expand_node(path_nodes, end_cords, c, cords, gcost);
+    }
+
+    gcost++;
+    return Game::ghost_pathfind(path_nodes, end_cords);
+}
+
+void Game::ghost_handler()
+{
+    // find ghost index
+    QObject *sender = QObject::sender();
+    int index = -1;
+    for(uint i = 0; i < ghost_timers.size(); i++)
+    {
+        if(sender == ghost_timers[i])
+        {
+            index = i;
+            break;
+        }
+    }
+
+    if(index == -1)
+    {
+        qWarning() << "[ERROR] index of ghost not found" << Qt::endl;
+        return;
+    }
+    
+    uint pacman_pos_x = this->pacman->x/SPRITE_SIZE;
+    uint pacman_pos_y = this->pacman->y/SPRITE_SIZE;
+    uint ghost_pos_x = this->ghosts[index]->x/SPRITE_SIZE;
+    uint ghost_pos_y = this->ghosts[index]->y/SPRITE_SIZE;
+
+    auto path_nodes = new std::vector<Path_node>;
+    Cords a = {pacman_pos_x, pacman_pos_y};
+    Cords b = {ghost_pos_x, ghost_pos_y};
+
+    path_nodes->push_back(Path_node(b, std::pair(-1, -1), calc_fcost(a, b, 0)));
+    auto final_path = Game::ghost_pathfind(path_nodes, a);
+
+    delete path_nodes;
+
+    if(final_path.empty())
+    {
+        qWarning() << "[ERROR] final path is empty" << Qt::endl;
+        return;
+    }
+    else
+    {
+        std::cout << "Final path for ghost[" << index << "]: ";
+        for (auto& i : final_path)
+        {
+            std::cout << i << ", ";
+        }
+        std::cout << std::endl;
+    }
+}

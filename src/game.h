@@ -1,7 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
-#include "qgraphicsscene.h"
-#include "qobjectdefs.h"
+
 #include <QGraphicsScene>
 #include <QFile>
 #include <QTextStream>
@@ -13,10 +12,12 @@
 #include <QXmlStreamWriter>
 #include <QDomDocument>
 #include <exception>
+#include <vector>
 #include "map_item.h"
 #include "entity.h"
 #include "utils.h"
 #include "logic_map.h"
+#include "path_node.h"
 
 /**
 Třída, uchovávající společné elementy Hry samotné a Replaye
@@ -49,10 +50,13 @@ class Game : public Map_displayer {
     Q_OBJECT
     
     public:
-    Logical_map* map_representation;
     game_state state;
 
     private:
+    Logic_map *map_representation;
+    std::vector<Entity *> ghosts;
+    std::vector<QTimer *> ghost_timers;
+    int ghost_id;
     entity_direction desired_pacman_direction;
 
     size_t keys_acquired; 
@@ -75,8 +79,11 @@ class Game : public Map_displayer {
     ~Game();
 
     void start();
+
     private:
     void stop(game_result result);
+    std::vector<entity_direction> ghost_pathfind(std::vector<Path_node> *path_nodes, Cords end);
+    bool expandable(Cords c, std::vector<Path_node>);
     void load_dynamic_map_elements(QString map_string);
 
     void keyPressEvent(QKeyEvent *keyEvent) override;
@@ -91,11 +98,11 @@ class Game : public Map_displayer {
     private slots:
     void elapsed_time_handler();
     void pacman_handler();
+    void ghost_handler();
     void logging_handler();
 
     signals:
     game_result game_over(game_result result);    //signál značící konec hry a její výsledek
-
 };
 
 /**
@@ -132,4 +139,3 @@ class Replay : public Map_displayer {
 };
 
 #endif //GAME_H
-

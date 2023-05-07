@@ -3,7 +3,7 @@
 /**
 @brief Kontruktor, inicializuje prázdnou mapu s šířkou width a výškou height
 */
-Logical_map::Logical_map(size_t width, size_t height){
+Logic_map::Logic_map(size_t width, size_t height){
     this->width = width;
     this->height = height;
 
@@ -12,30 +12,30 @@ Logical_map::Logical_map(size_t width, size_t height){
 }
 
 /**
-@brief Destruktor třídy Logical_map
+@brief Destruktor třídy Logic_map
 */
-Logical_map::~Logical_map() {
+Logic_map::~Logic_map() {
     delete[] this->map;
 }
 
 /**
 @brief Setter pro nastavování hodnoty políčka [x,y] v mapě
 */
-void Logical_map::set_tile(size_t x, size_t y, map_item_type tile_type) {
+void Logic_map::set_tile(size_t x, size_t y, map_item_type tile_type) {
     this->map[INDEX(x, y)] = tile_type;
 }
 
 /**
 @brief Getter pro získání hodnoty políčka [x,y] v mapě
 */
-map_item_type Logical_map::get_tile(size_t x, size_t y) {
+map_item_type Logic_map::get_tile(size_t x, size_t y) {
     return this->map[INDEX(x,y)];
 }
 
 /**
 @brief Metoda vypíše mapu na standartní chybový výstup, pro ladící účely
 */
-void Logical_map::print_map() {
+void Logic_map::print_map() {
     for(size_t i = 0; i < this->height; i++) {
         for(size_t j = 0; j < this->width; j++) {
             switch(this->map[INDEX(j, i)]) {
@@ -59,4 +59,3 @@ void Logical_map::print_map() {
         std::cerr << std::endl;
     }
 }
-
