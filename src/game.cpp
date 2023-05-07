@@ -350,6 +350,11 @@ void Game::stop(game_result result) {
     this->movement_timer->stop();
     this->play_timer->stop();
     this->state = game_state::finished;
+
+    for(QTimer* timer : this->ghost_timers) {
+        timer->stop();
+    }
+    
     emit game_over(result);
 }
 
