@@ -3,6 +3,7 @@
 #include "qobject.h"
 #include "src/entity.h"
 #include "src/utils.h"
+#include "src/path_node.h"
 #include <algorithm>
 #include <cmath>
 #include <ostream>
@@ -277,14 +278,12 @@ void Game::load_dynamic_map_elements(QString map_string) {
                     this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
                     this->addItem(this->pacman);
                     break;
-                }
+            }
         }
-        this->addItem(this->pacman);
+    }
 
-        for(uint i = 0; i < this->ghosts.size(); i++)
-        {
-            this->addItem(this->ghosts[i]);
-        }
+    for(uint i = 0; i < this->ghosts.size(); i++) {
+        this->addItem(this->ghosts[i]);
     }
 }
 
