@@ -8,4 +8,6 @@
 #define PACMAN_MOVEMENT_DELAY 40
 #define TYPE_DATA_KEY 0
 
+using Cords = std::pair<int, int>;
+
 #endif //UTILS_H

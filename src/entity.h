@@ -27,6 +27,7 @@ class Entity : public QGraphicsPixmapItem{
     bool would_turn(entity_direction dir);
     void set_next_sprite(entity_direction dir);
     int id = 0;
+    entity_type type;
 
     void get_color_sprites();
     std::vector<QPixmap *> ghost_sprites;
