@@ -398,7 +398,8 @@ void Game::pacman_interaction_handler() {
                 this->update_key_counter();
                 break;
             case entity_type::ghost:
-                /* qDebug() << "[WARN]: Collision with ghosts not implemented yet"; */
+                qDebug() << "[INFO]: Colliding with ghost, game over";
+                this->stop(game_result::defeat);
                 break;
         }
     }

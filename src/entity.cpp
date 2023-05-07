@@ -72,6 +72,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixm
     this->next_sprite_index = 0;
     this->type = type;
     this->id = id;
+    this->setData(TYPE_DATA_KEY, QVariant(type));
 
     //inicializuje grafickou reprezentaci entity s počátečním sprajtem
     get_color_sprites();
