@@ -184,6 +184,8 @@ Game::Game(QString map_path, QString log_path) : Map_displayer() {
     this->desired_pacman_direction = entity_direction::stopped;
     this->movement_timer = new QTimer(this);
     connect(movement_timer, SIGNAL(timeout()), this, SLOT(pacman_handler()));
+    connect(movement_timer, SIGNAL(timeout()), this, SLOT(ghost_movement_handler()));
+
     if(log_path != "") {
         connect(movement_timer, SIGNAL(timeout()), this, SLOT(logging_handler()));
     }
@@ -191,7 +193,7 @@ Game::Game(QString map_path, QString log_path) : Map_displayer() {
     for(uint i = 0; i < this->ghosts.size(); i++)
     {
         QTimer *g_timer = new QTimer(this);
-        connect(g_timer, SIGNAL(timeout()), this, SLOT(ghost_handler()));
+        connect(g_timer, SIGNAL(timeout()), this, SLOT(ghost_pathfind_handler()));
         this->ghost_timers.push_back(g_timer);
     }
 }
@@ -333,7 +335,7 @@ void Game::start() {
     this->play_timer->start(1000);    //interval 1s
     this->state = game_state::playing;
 
-    int GHOST_MOVEMENT_DELAY = PACMAN_MOVEMENT_DELAY*100;
+    int GHOST_MOVEMENT_DELAY = PACMAN_MOVEMENT_DELAY * 50;
     for(uint i = 0; i < this->ghost_timers.size(); i++)
     {
         this->ghost_timers[i]->start(GHOST_MOVEMENT_DELAY);
@@ -407,6 +409,20 @@ void Game::pacman_interaction_handler() {
                 this->stop(game_result::defeat);
                 break;
         }
+    }
+}
+
+/**
+@brief Pohne se všemi duchy o 1 krok, který mají uložený v path
+*/
+void Game::ghost_movement_handler() {
+    for(Entity* ghost : this->ghosts) {
+        if(ghost->path.empty()) {
+            continue;
+        }
+
+        ghost->movement_handler(ghost->path.front(), this);
+        ghost->path.erase(ghost->path.begin());
     }
 }
 
@@ -863,7 +879,7 @@ std::vector<entity_direction> Game::ghost_pathfind(std::vector<Path_node> *path_
     return Game::ghost_pathfind(path_nodes, end_cords);
 }
 
-void Game::ghost_handler()
+void Game::ghost_pathfind_handler()
 {
     // find ghost index
     QObject *sender = QObject::sender();
@@ -882,6 +898,11 @@ void Game::ghost_handler()
         qWarning() << "[ERROR] index of ghost not found" << Qt::endl;
         return;
     }
+
+    //pokud není duch zarovnán s mřížkou, nebude mu změněna cesta
+    if(this->ghosts[index]->aligned_with_grid() == false) {
+        return;
+    }
     
     uint pacman_pos_x = this->pacman->x/SPRITE_SIZE;
     uint pacman_pos_y = this->pacman->y/SPRITE_SIZE;
@@ -897,18 +918,13 @@ void Game::ghost_handler()
 
     delete path_nodes;
 
-    if(final_path.empty())
-    {
-        qWarning() << "[ERROR] final path is empty" << Qt::endl;
-        return;
-    }
-    else
-    {
-        std::cout << "Final path for ghost[" << index << "]: ";
-        for (auto& i : final_path)
-        {
-            std::cout << i << ", ";
+    //nahrazení cesty v duchovi nově vypočítanou cestou
+    Entity* ghost = this->ghosts[index];
+    ghost->path.clear();
+    for(size_t i = 0; i < final_path.size(); i++) {
+        for(size_t j = 0; j < SPRITE_SIZE; j++) {
+            ghost->path.push_back(final_path.at(i));
+
         }
-        std::cout << std::endl;
     }
 }

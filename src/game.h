@@ -96,9 +96,10 @@ class Game : public Map_displayer {
     void update_key_counter();
 
     private slots:
+    void ghost_movement_handler();
     void elapsed_time_handler();
     void pacman_handler();
-    void ghost_handler();
+    void ghost_pathfind_handler();
     void logging_handler();
 
     signals:

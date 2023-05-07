@@ -20,11 +20,12 @@ class Entity : public QGraphicsPixmapItem{
     unsigned y;
     QString current_pixmap_path;
 
+    std::vector<entity_direction> path;
+
     private:
     entity_direction direction;
     unsigned next_sprite_index;
     void move(entity_direction dir);
-    bool aligned_with_grid();
     bool would_turn(entity_direction dir);
     void set_next_sprite(entity_direction dir);
     int id = 0;
@@ -37,6 +38,7 @@ class Entity : public QGraphicsPixmapItem{
     Entity(entity_type type, unsigned x, unsigned y);
     Entity(entity_type type, unsigned x, unsigned y, int id);
     ~Entity();
+    bool aligned_with_grid();
     bool movement_handler(entity_direction dir, QGraphicsScene* scene);
     entity_type get_type();
     entity_direction get_direction();

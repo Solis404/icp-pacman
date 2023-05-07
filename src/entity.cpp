@@ -72,6 +72,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixm
     this->next_sprite_index = 0;
     this->type = type;
     this->id = id;
+    this->path = std::vector<entity_direction>();
     this->setData(TYPE_DATA_KEY, QVariant(type));
 
     //inicializuje grafickou reprezentaci entity s počátečním sprajtem
@@ -163,7 +164,8 @@ void Entity::set_next_sprite(entity_direction dir) {
             this->next_sprite_index = (this->next_sprite_index + 1) % PACMAN_SPRITES;
             break;
         case ghost:
-            this->setPixmap(*ghost_sprites[dir]);
+            //TODO: nahradit konstantní směr right za proměnný dir (zajištění animace duchů)
+            new_sprite_pixmap = QPixmap(*ghost_sprites[entity_direction::right]);
             return;
     }
 
