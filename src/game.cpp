@@ -490,7 +490,7 @@ void Game::logging_handler() {
         this->xml_writer->writeStartElement("ghost");
         this->xml_writer->writeAttribute("x", QString::number(ghost->x));
         this->xml_writer->writeAttribute("y", QString::number(ghost->y));
-        // this->xml_writer->writeAttribute("sprite", ghost->current_pixmap_path);
+        this->xml_writer->writeAttribute("dir", QString::number(ghost->last_path));
         this->xml_writer->writeEndElement();
     }
     this->xml_writer->writeEndElement();
@@ -578,11 +578,20 @@ void Replay::initialize_entities() {
     //nastavení duchů
     QDomElement ghost = ghosts.firstChildElement();
     while(ghost.isNull() == false) {
-        QGraphicsPixmapItem* ghost_item = new QGraphicsPixmapItem(QPixmap("sprites/ghost_sprites/ghost_right.png"));
+        Entity* ghost_item = new Entity(entity_type::ghost, ghost.attribute("x").toInt(), ghost.attribute("y").toInt(), 0);
         QPointF ghost_pos(ghost.attribute("x").toInt(), ghost.attribute("y").toInt());
+
+        //inicializace sprajtů ducha
+        std::vector<QPixmap *> sprites = initialize_ghost_sprites(std::get<0>(ghost_colors.front()),
+                                                                  std::get<1>(ghost_colors.front()),
+                                                                  std::get<2>(ghost_colors.front()));
+        ghost_colors.erase(ghost_colors.begin());    //smazání barvy
+        ghost_item->ghost_sprites = sprites;
+
         ghost_item->setPos(ghost_pos);
         this->ghosts.push_back(ghost_item);
         this->addItem(ghost_item);
+
         ghost = ghost.nextSiblingElement();
     }
 
@@ -706,7 +715,9 @@ void Replay::display_step(QDomElement& step) {
     QDomElement ghost = ghosts.firstChildElement();
     for(size_t i = 0; i < this->ghosts.size(); i++) {
         QPointF new_ghost_pos(ghost.attribute("x").toInt(), ghost.attribute("y").toInt());
-        this->ghosts.at(i)->setPos(new_ghost_pos);
+        this->ghosts.at(i)->setPos(new_ghost_pos);    //nastevení nové pozice
+        entity_direction dir = static_cast<entity_direction>(ghost.attribute("dir").toInt());
+        this->ghosts.at(i)->setPixmap(*(this->ghosts.at(i)->ghost_sprites.at(dir)));    //nastevení nového sprajtu
         ghost = ghost.nextSiblingElement();
     }
 
@@ -983,4 +994,50 @@ void Game::ghost_pathfind_handler()
 
         }
     }
+}
+
+std::vector<QPixmap *> Replay::initialize_ghost_sprites(int r, int g, int b) {
+    QPixmap sprite_body, sprite_eyes, *new_sprite = nullptr;
+    QBitmap mask;
+    
+    sprite_body.load(ghost_body_temp);
+    
+    mask = sprite_body.createMaskFromColor(QColor("#464646"), Qt::MaskOutColor);
+    
+    QPixmap *colored_body = new QPixmap(sprite_body.size());
+
+    colored_body->fill(Qt::transparent);
+
+    QPainter cb_painter(colored_body);
+    cb_painter.drawPixmap(0, 0, sprite_body);
+    cb_painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+
+    cb_painter.fillRect(colored_body->rect(), QColor(r, g, b));
+    cb_painter.end();
+
+    
+    std::vector<QPixmap *> ghost_sprites;     
+    for(int i = 0; i < GHOST_SHARED; i++)
+    {
+        if(i == entity_direction::stopped)
+        {
+            // create a copy of right sprite to have a sprite for the stopped direction
+            ghost_sprites.push_back(ghost_sprites[0]);
+            continue;
+        }
+
+        new_sprite = new QPixmap(colored_body->size());
+        new_sprite->fill(Qt::transparent);
+
+        QPainter ns_painter(new_sprite);
+        
+        ns_painter.drawPixmap(0, 0, *colored_body);
+        ns_painter.drawPixmap(0, 0, ghost_sprites_shared[i]);
+        ns_painter.end();
+        
+        ghost_sprites.push_back(new_sprite);
+    }
+
+    delete colored_body;
+    return ghost_sprites;
 }

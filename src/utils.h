@@ -7,6 +7,7 @@
 #define PACMAN_SPRITES 5
 #define PACMAN_MOVEMENT_DELAY 40
 #define TYPE_DATA_KEY 0
+#define GHOST_SPRITES_DATA_KEY 1
 #define REPLAY_MOVEMENT_DELAY 40
 
 using Cords = std::pair<int, int>;

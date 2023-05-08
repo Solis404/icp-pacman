@@ -118,7 +118,7 @@ class Replay : public Map_displayer {
     ~Replay();
 
     QGraphicsPixmapItem* pacman;
-    std::vector<QGraphicsPixmapItem*> ghosts;
+    std::vector<Entity*> ghosts;
     std::vector<std::tuple<int, int, int>> ghost_colors;
 
     QTimer* step_timer;
@@ -132,6 +132,7 @@ class Replay : public Map_displayer {
     Map_item* find_surplus_key(std::vector<Map_item*>& visible_keys, QDomElement& log_keys);
     Map_item* find_missing_key(std::vector<Map_item*>& visible_keys, QDomElement& log_keys);
     void initialize_entities();
+    std::vector<QPixmap *> initialize_ghost_sprites(int r, int g, int b);
     void start();
 
     void keyPressEvent(QKeyEvent *keyEvent) override;

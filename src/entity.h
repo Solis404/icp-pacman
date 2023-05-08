@@ -7,6 +7,10 @@
 #include "utils.h"
 #include "map_item.h"
 
+extern const int GHOST_SHARED;
+extern const QString ghost_body_temp;
+extern const QString ghost_sprites_shared[];
+
 enum entity_type {pacman = 10, ghost};    //začátek od 10, aby nedošlo k interferenci mezi typem entity a objektem na mapě (map_item)
 enum entity_direction {right, left, up, down, stopped};
 
@@ -23,6 +27,7 @@ class Entity : public QGraphicsPixmapItem{
     std::vector<entity_direction> path;
     entity_direction last_path;
     std::tuple<int, int, int> color;
+    std::vector<QPixmap *> ghost_sprites;
 
     private:
     entity_direction direction;
@@ -34,7 +39,6 @@ class Entity : public QGraphicsPixmapItem{
     entity_type type;
 
     void get_color_sprites();
-    std::vector<QPixmap *> ghost_sprites;
 
     public:
     Entity(entity_type type, unsigned x, unsigned y);
