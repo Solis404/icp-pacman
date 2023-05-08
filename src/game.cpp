@@ -161,12 +161,23 @@ Game::Game(QString map_path, QString log_path) : Map_displayer() {
         this->xml_writer = new QXmlStreamWriter(this->log_file);
         xml_writer->setAutoFormatting(true);    //human-readable xml
         xml_writer->writeStartDocument();
+        xml_writer->writeStartElement("pacman_log");
 
         //zapsání mapy do xml dokumentu
-        xml_writer->writeStartElement("pacman_log");
         xml_writer->writeStartElement("map");
         xml_writer->writeCharacters(map);
         xml_writer->writeEndElement();    //map
+
+        //zapsání barvy všech duchů do logu
+        xml_writer->writeStartElement("ghost_colors");
+        for(Entity* ghost : this->ghosts) {
+            xml_writer->writeStartElement("ghost");
+            xml_writer->writeAttribute("r", QString::number(std::get<0>(ghost->color)));
+            xml_writer->writeAttribute("g", QString::number(std::get<1>(ghost->color)));
+            xml_writer->writeAttribute("b", QString::number(std::get<2>(ghost->color)));
+            xml_writer->writeEndElement();    //ghost
+        }
+        xml_writer->writeEndElement();    //ghost_colors
 
         //začátek zapisování stavů
         xml_writer->writeStartElement("states");

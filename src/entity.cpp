@@ -113,8 +113,8 @@ void Entity::get_color_sprites()
     g = get_random_int(0, 255);
     b = get_random_int(0, 255);
 
-
     //TODO implement color saving
+    this->color = {r, g, b};
     
     cb_painter.fillRect(colored_body->rect(), QColor(r, g, b));
     cb_painter.end();
