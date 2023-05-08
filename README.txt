@@ -1,23 +1,16 @@
-# TODO
-### Nutné pro zápočet
-- implementovat pathfinding (další třída, log. reprezentace mapy?)
-- implementovat N duchů (vyřešit textury, ovládání pomocí pathfinding)
-
-### Když bude čas/bude bavit
-- zpracovat obrázky do qrescources, zapéct do executable
-- implementace menu a načítání hry pomocí GUI
-- zlepšení user experience pacmana (zatočení v pásmu, ne jen na středu)
-
-# Jak vyvíjet?
-1. Vygenerovat Makefile z project file-u pomocí `qmake pacman.pro`
-2. Spustit překlad pomocí `make`
-
-### Tipy
-- Nový makefile se musí vygenerovat při:
-  - úpravě project file-u
-  - vytvoření nových zdrojáků v src/
-
-Pro funkci LSP je nutné vygenerovat compile_commands.json, lze pomocí pomocí nástroje Bear `make clean && bear -- make` Již je přidán v .gitignore
+# Implementovaná funkčnost:
+  - hlavní menu - tlačítka pro výběr režimu hry a ukončení
+  - normální hra (panáček se snaží dostat do cíle, než ho sní duchové)
+    - pohyb panáčka pomocí kláves:
+        W
+      A   S
+        D
+    - samostatný pohyb duchů, s výběrem cesty pomocí algoritmu A*, kteří
+      jsou naváděni na panáčka
+    - systém klíčů, panáček musí posbírat všechny klíče, aby mohl vyhrát dosáhnutím cíle
+    - ukazatel hraného času a počítadla klíčů nad herní mapou
+    - automatické logování hry do souboru
+  - zpětné přehrávání logované hry
 
 # Implementační detaily
 

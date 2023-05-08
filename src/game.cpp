@@ -1,3 +1,11 @@
+/**
+@file game.cpp
+
+@brief Definice funkcí a atributů pro třídy reprezentující herní logiku, přehrávání
+
+Autoři: Robin Volf (xvolfr00), Patrik Uher (xuherp02)
+*/
+
 #include "game.h"
 #include "qnamespace.h"
 #include "qobject.h"
@@ -10,29 +18,38 @@
 #include <utility>
 #include <vector>
 
+/**
+@brief Konstruktor, vyrobí prázdnou mapu
+*/
 Map_displayer::Map_displayer() : QGraphicsScene() {
     this->keys_needed = 0;
     this->map_height = 0;
     this->map_width = 0;
 }
 
+/**
+@brief Destruktor
+*/
 Map_displayer::~Map_displayer(){}
 
 /**
 @brief Metoda pro načtení statických položek mapy (políčka)
-@param QString map - Řetězec představující mapu
+
+Načte z řetězce představující mapu všechny políčka kromě duchů a pacmana
+
+@param map - Řetězec představující mapu
 */
 void Map_displayer::load_static_map_elements(QString map) {
     //načtení výšky a šířky mapy
-    QTextStream input = QTextStream(&map);    //Stream pro čtení
+    QTextStream* input = new QTextStream(&map);    //Stream pro čtení
 
-    input >> this->map_height;
-    input >> this->map_width;
+    *(input) >> this->map_height;
+    *(input) >> this->map_width;
     if(map_height == 0 || map_width == 0) {
         throw std::runtime_error("Invalid map size");
     }
     
-    input.readLine();    //dočtení řádku do konce
+    input->readLine();    //dočtení řádku do konce
 
     //ve skutečnosti ještě mapu obklopuje neuvedená zeď
     map_height += 2;
@@ -45,10 +62,10 @@ void Map_displayer::load_static_map_elements(QString map) {
     size_t finish_num = 0;
     size_t start_num = 0;
     for(unsigned i = 1; i < map_height - 1; i++) {
-        if(input.atEnd()) {    //předčasně ukončená mapa, nesouhlasí výška
+        if(input->atEnd()) {    //předčasně ukončená mapa, nesouhlasí výška
             throw std::runtime_error("Malformed map data");
         }
-        QString line = input.readLine();
+        QString line = input->readLine();
         if(static_cast<unsigned>(line.size()) != map_width - 2) {
             throw std::runtime_error("Garbage data after line in map data");
         }
@@ -127,6 +144,8 @@ void Map_displayer::load_static_map_elements(QString map) {
 
     //nastavení černého pozadí
     this->setBackgroundBrush(Qt::black);
+
+    delete input;
 }
 
 
@@ -134,8 +153,8 @@ void Map_displayer::load_static_map_elements(QString map) {
 
 /**
 @brief Konstruktor, který vytvoří hru, volitelně s logováním
-@param QString map_path - Cesta, kde je vstupní soubor s mapou
-@param QString log_path - Cesta, kam se má uložit soubor s logováním, pokud není uveden,
+@param map_path - Cesta, kde je vstupní soubor s mapou
+@param log_path - Cesta, kam se má uložit soubor s logováním, pokud není uveden,
 k logování nedojde
 @note Může vyhodit vyjímku std::runtime_error v případě neplatných vstupních dat
 */
@@ -253,8 +272,8 @@ Nekontroluje správnost mapy, určen k volání po načtení statických polože
 void Game::load_dynamic_map_elements(QString map_string) {
 
     //načtení výšky a šířky mapy
-    QTextStream input = QTextStream(&map_string);    //Stream pro čtení
-    input.readLine();    //zahodí první řádek (velikost mapy)
+    QTextStream* input = new QTextStream(&map_string);    //Stream pro čtení
+    input->readLine();    //zahodí první řádek (velikost mapy)
 
     this->map_representation = new Logic_map(map_width, map_height);
     Entity *ghost;
@@ -262,7 +281,7 @@ void Game::load_dynamic_map_elements(QString map_string) {
     //nastavení mapy podle předlohy ze souboru
     //čtení každého řádku
     for(unsigned i = 1; i < map_height - 1; i++) {
-        QString line = input.readLine();
+        QString line = input->readLine();
         unsigned line_index = 0;
         for(unsigned j = 1; j < map_width - 1; j++) {
             QChar character = line.at(line_index);
@@ -289,7 +308,7 @@ void Game::load_dynamic_map_elements(QString map_string) {
                     break;
                 case 'S':
                     this->map_representation->set_tile(j, i, map_item_type::start);
-                    this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
+                    this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE, 0);
                     this->addItem(this->pacman);
                     break;
             }
@@ -299,6 +318,8 @@ void Game::load_dynamic_map_elements(QString map_string) {
     for(uint i = 0; i < this->ghosts.size(); i++) {
         this->addItem(this->ghosts[i]);
     }
+
+    delete input;
 }
 
 /**
@@ -312,13 +333,13 @@ void Game::keyPressEvent(QKeyEvent *keyEvent) {
             this->desired_pacman_direction = entity_direction::up;
             break;
         case Qt::Key_A:
-            this->desired_pacman_direction = entity_direction::left;
+            this->desired_pacman_direction = entity_direction::left_dir;
             break;
         case Qt::Key_S:
             this->desired_pacman_direction = entity_direction::down;
             break;
         case Qt::Key_D:
-            this->desired_pacman_direction = entity_direction::right;
+            this->desired_pacman_direction = entity_direction::right_dir;
             break;
     }
 }
@@ -500,7 +521,7 @@ void Game::logging_handler() {
 
 /**
 @brief Konstruktor třídy Replay, vytvoří hru z logu
-@param QString log_path - Cesta k souboru s logem
+@param log_path - Cesta k souboru s logem
 
 Načte statické elementy z logu
 
@@ -545,8 +566,7 @@ Replay::Replay(QString log_path) : Map_displayer() {
 }
 
 /**
-@brief Inicializuje entity (pacmana a duchy) TODO(duchové)
-
+@brief Inicializuje entity (pacmana a duchy)
 
 Načte z prvního kroku pozici pacmana a duchů a zařadí je do scény. Inicializuje také
 atribut states.
@@ -599,7 +619,7 @@ void Replay::initialize_entities() {
 
 /**
 @brief Metoda, která zajistí změnu klíčů (schování/odkrytí), pokud je třeba
-@param QDomElement& keys - Parent element klíčů z xml logu
+@param keys - Parent element klíčů z xml logu
 */
 void Replay::handle_key_change(QDomElement& keys) {
     std::vector<Map_item*> visible_keys;
@@ -621,8 +641,8 @@ void Replay::handle_key_change(QDomElement& keys) {
 
 /**
 @brief Funkce pro nalezení klíče, který se vyskytuje ve visible keys a zároveň se nevyskytuje v log_keys
-@param std::vector<Map_item *>& visible_keys - vektor viditelných klíčů
-@param QDomElement& log_keys - Element obsahující klíče z logu
+@param visible_keys - vektor viditelných klíčů
+@param log_keys - Element obsahující klíče z logu
 @return Vrací ukazatel na přebytečný klíč
 */
 Map_item* Replay::find_surplus_key(std::vector<Map_item *>& visible_keys, QDomElement& log_keys) {
@@ -650,8 +670,8 @@ Map_item* Replay::find_surplus_key(std::vector<Map_item *>& visible_keys, QDomEl
 
 /**
 @brief Funkce pro nalezení klíče, který se vyskytuje v log keys a zároveň se nevyskytuje ve visible_keys
-@param std::vector<Map_item *>& visible_keys - vektor viditelných klíčů
-@param QDomElement& log_keys - Element obsahující klíče z logu
+@param visible_keys - vektor viditelných klíčů
+@param log_keys - Element obsahující klíče z logu
 @return Vrací ukazatel na klíč, který chybí ve visible_keys
 */
 Map_item* Replay::find_missing_key(std::vector<Map_item *>& visible_keys, QDomElement& log_keys) {
@@ -688,7 +708,7 @@ Map_item* Replay::find_missing_key(std::vector<Map_item *>& visible_keys, QDomEl
 
 /**
 @brief Metoda pro zobrazení kroku na mapě
-@param QDomNode step - Krok z xml logu, který se má zobrazit
+@param step - Krok z xml logu, který se má zobrazit
 */
 void Replay::display_step(QDomElement& step) {
     QDomNodeList step_items = step.childNodes(); 
@@ -723,6 +743,9 @@ void Replay::display_step(QDomElement& step) {
 
 }
 
+/**
+@brief Metoda pro spuštění přehrávání hry z logu
+*/
 void Replay::start() {
     connect(this->step_timer, SIGNAL(timeout()), this, SLOT(step_handler()));
     this->step_timer->start(REPLAY_MOVEMENT_DELAY);
@@ -748,6 +771,7 @@ void Replay::step_handler() {
         if(this->backtracking == false) {
             qDebug() << "[INFO]: Log is at end";
             this->step_timer->stop();
+            emit log_over();
             return;
         } else {
             qDebug() << "[INFO]: Log can't continue, hit start";
@@ -824,7 +848,7 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
 
     if(not found)
     {
-        qWarning() << "[ERROR] node not found in checked node" << Qt::endl;
+        qWarning() << "[ERROR] node not found in checked node";
         return std::vector<entity_direction>(); //return empty vector
     }
 
@@ -839,12 +863,12 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
     if(((parent_cords.first - last_cords.first) == -1) && ((parent_cords.second-last_cords.second) == 0))
     {
         //right
-        final_direction.push_back(entity_direction::right);
+        final_direction.push_back(entity_direction::right_dir);
     }
     else if (((parent_cords.first - last_cords.first) == 1) && ((parent_cords.second-last_cords.second) == 0))
     {
         //left
-        final_direction.push_back(entity_direction::left);
+        final_direction.push_back(entity_direction::left_dir);
     }
     else if (((parent_cords.first - last_cords.first) == 0) && ((parent_cords.second-last_cords.second) == -1))
     {
@@ -858,7 +882,7 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
     }
     else
     {
-        qWarning() << "[ERROR] unknown cord direction" << Qt::endl;
+        qWarning() << "[ERROR] unknown cord direction";
     }
     
     return get_final_path(checked_nodes, parent_cords);
@@ -899,7 +923,7 @@ std::vector<entity_direction> Game::ghost_pathfind(std::vector<Path_node> *path_
         // empty set
         gcost = 1;
         checked_nodes.clear();
-        qWarning() << "Ghost unable to find a path to pacman" << Qt::endl;
+        qWarning() << "Ghost unable to find a path to pacman";
         return std::vector<entity_direction> {entity_direction::stopped};
     }
 
@@ -962,7 +986,7 @@ void Game::ghost_pathfind_handler()
 
     if(index == -1)
     {
-        qWarning() << "[ERROR] index of ghost not found" << Qt::endl;
+        qWarning() << "[ERROR] index of ghost not found";
         return;
     }
 
@@ -980,7 +1004,7 @@ void Game::ghost_pathfind_handler()
     Cords a = {pacman_pos_x, pacman_pos_y};
     Cords b = {ghost_pos_x, ghost_pos_y};
 
-    path_nodes->push_back(Path_node(b, std::pair(-1, -1), calc_fcost(a, b, 0)));
+    path_nodes->push_back(Path_node(b, std::pair<int, int>(-1, -1), calc_fcost(a, b, 0)));
     auto final_path = Game::ghost_pathfind(path_nodes, a);
 
     delete path_nodes;
@@ -996,6 +1020,13 @@ void Game::ghost_pathfind_handler()
     }
 }
 
+/**
+@brief Metoda pro získání vektoru sprajtů s příslušnou barvou (RGB)
+@param r - Číslo reprezentující červenou intenzitu barvy
+@param g - Číslo reprezentující zelenou intenzitu barvy
+@param b - Číslo reprezentující modrou intenzitu barvy
+@return Vrací vektor se sprajty
+*/
 std::vector<QPixmap *> Replay::initialize_ghost_sprites(int r, int g, int b) {
     QPixmap sprite_body, sprite_eyes, *new_sprite = nullptr;
     QBitmap mask;

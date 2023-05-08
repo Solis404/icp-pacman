@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Obshuje definici třídy Map_item
+
+Autoři: Robin Volf (xvolfr00)
+*/
 #ifndef MAP_ITEM_H
 #define MAP_ITEM_H
 #include "qgraphicsitem.h"

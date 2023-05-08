@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Definice metod třídy Entity a konstant s ní spojených (cesty k sprajtům, atd.)
+
+Autoři: Robin Volf (xvolfr00), Patrik Uher (xuherp02)
+*/
 #include "entity.h"
 #include "qgraphicsitem.h"
 #include "src/utils.h"
@@ -48,38 +55,39 @@ const QString ghost_sprites_shared[GHOST_SHARED]
 @brief Konstruktor entity, nastaví její typ a úvodní pozici na x, y
 
 Načte také úvodní sprajt entity
-@param entity_type type - Typ entity, výčtový typ = {pacman, ghost}
-@param unsigned x - úvodní horizontální souřadnice entity
-@param unsigned y - úvodní vertikální souřadnice entity (pozor dolů je kladný směr!)
+@param type - Typ entity, výčtový typ = {pacman, ghost}
+@param x - úvodní horizontální souřadnice entity
+@param y - úvodní vertikální souřadnice entity (pozor dolů je kladný směr!)
+@param id - Id ducha, použito pouze při konstrukci ducha
 */
-Entity::Entity(entity_type type, unsigned x, unsigned y) : QGraphicsPixmapItem() {
-    this->x = x;
-    this->y = y;
-    this->setPos(x, y);
-    this->direction = entity_direction::stopped;
-    this->next_sprite_index = 0;
-    this->setData(TYPE_DATA_KEY, QVariant(type));
-    
-    //inicializuje grafickou reprezentaci entity s počátečním sprajtem
-    this->setPixmap(QPixmap(pacman_sprite_files[entity_direction::stopped][0]));
-    this->current_pixmap_path = pacman_sprite_files[entity_direction::stopped][0];
-}
-
 Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixmapItem() {
-    this->x = x;
-    this->y = y;
-    this->setPos(x, y);
-    this->direction = entity_direction::stopped;
-    this->next_sprite_index = 0;
-    this->type = type;
-    this->id = id;
-    this->path = std::vector<entity_direction>();
-    this->setData(TYPE_DATA_KEY, QVariant(type));
+    if(type == entity_type::pacman) {    //vytvoří pacmana
+        this->x = x;
+        this->y = y;
+        this->setPos(x, y);
+        this->direction = entity_direction::stopped;
+        this->next_sprite_index = 0;
+        this->setData(TYPE_DATA_KEY, QVariant(type));
+    
+        //inicializuje grafickou reprezentaci entity s počátečním sprajtem
+        this->setPixmap(QPixmap(pacman_sprite_files[entity_direction::stopped][0]));
+        this->current_pixmap_path = pacman_sprite_files[entity_direction::stopped][0];
+    } else {    //vytvoří ducha
+        this->x = x;
+        this->y = y;
+        this->setPos(x, y);
+        this->direction = entity_direction::stopped;
+        this->next_sprite_index = 0;
+        this->type = type;
+        this->id = id;
+        this->path = std::vector<entity_direction>();
+        this->setData(TYPE_DATA_KEY, QVariant(type));
 
-    //inicializuje grafickou reprezentaci entity s počátečním sprajtem
-    get_color_sprites();
-    this->setPixmap(*ghost_sprites[entity_direction::right]);
-    this->current_pixmap_path = ghost_sprites_shared[entity_direction::stopped];
+        //inicializuje grafickou reprezentaci entity s počátečním sprajtem
+        get_color_sprites();
+        this->setPixmap(*ghost_sprites[entity_direction::right_dir]);
+        this->current_pixmap_path = ghost_sprites_shared[entity_direction::stopped];
+    }
 }
 
 int Entity::get_random_int(int min, int max)
@@ -202,8 +210,8 @@ Za zatočení se považuje změna směru, která není couvání
 */
 bool Entity::would_turn(entity_direction dir) {
     switch(this->direction) {
-        case entity_direction::right:
-        case entity_direction::left:
+        case entity_direction::right_dir:
+        case entity_direction::left_dir:
             if(dir == up || dir == down) {
                 return true;
             } else {
@@ -211,7 +219,7 @@ bool Entity::would_turn(entity_direction dir) {
             }
         case entity_direction::up:
         case entity_direction::down:
-            if(dir == entity_direction::right || dir == entity_direction::left) {
+            if(dir == entity_direction::right_dir || dir == entity_direction::left_dir) {
                 return true;
             } else {
                 return false;
@@ -231,8 +239,8 @@ bool Entity::would_turn(entity_direction dir) {
 
 Pohyb je povolen pouze po mřížce (není možné změnit směr v půlce bloku)
 
-@param entity_direction dir - Směr ve kterém se má entita pohnout
-@param QGraphicsScene* scene - Scéna, ve které se entita pohybuje, nutné pro kontrolu kolize
+@param dir - Směr ve kterém se má entita pohnout
+@param scene - Scéna, ve které se entita pohybuje, nutné pro kontrolu kolize
 @return bool - Vrací true, pokud se entita pohnula, false pokud ne (nešlo to)
 */
 bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
@@ -247,10 +255,10 @@ bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
     //vyrobení bodu pro vyzkoušení kolize
     QPointF probe(this->x, this->y);
     switch(dir) {
-        case entity_direction::right:
+        case entity_direction::right_dir:
             probe.rx() += SPRITE_SIZE;
         break;
-        case entity_direction::left:
+        case entity_direction::left_dir:
             probe.rx() -= 1;
         break;
         case entity_direction::down:
@@ -288,11 +296,11 @@ void Entity::move(entity_direction dir) {
     int dx;
     int dy;
     switch(dir) {
-        case entity_direction::right:
+        case entity_direction::right_dir:
             dx = 1;
             dy = 0;
             break;
-        case entity_direction::left:
+        case entity_direction::left_dir:
             dx = -1;
             dy = 0;
             break;

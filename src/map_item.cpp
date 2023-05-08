@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Obshuje definice metod třídy Map_item a s ní spojené proměnné
+
+Autoři: Robin Volf (xvolfr00)
+*/
 #include "map_item.h"
 
 /**
@@ -17,6 +24,7 @@ const QString map_item_sprite_files[] = {"sprites/map_sprites/wall.png",
 
 Vytvoří objekt map_item s daným typem a vytvoří grafickou reprezentaci scene_item
 @param type - typ položky, jeden z "wall", "key", "start", "finish"
+@param parent - Rodič, použito pro Qt parenting systém
 */
 Map_item::Map_item(map_item_type type, QGraphicsItem* parent) : QGraphicsPixmapItem(parent) {
     //nastavení správné cesty k textuře a nahrání pixmapy

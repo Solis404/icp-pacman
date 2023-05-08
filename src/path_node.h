@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Obshuje definic třídy Path_node
+
+Autoři: Patrik Uher (xuherp02)
+*/
 #include "utils.h"
 
 #ifndef PATH_NODE_H
