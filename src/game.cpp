@@ -161,12 +161,23 @@ Game::Game(QString map_path, QString log_path) : Map_displayer() {
         this->xml_writer = new QXmlStreamWriter(this->log_file);
         xml_writer->setAutoFormatting(true);    //human-readable xml
         xml_writer->writeStartDocument();
+        xml_writer->writeStartElement("pacman_log");
 
         //zapsání mapy do xml dokumentu
-        xml_writer->writeStartElement("pacman_log");
         xml_writer->writeStartElement("map");
         xml_writer->writeCharacters(map);
         xml_writer->writeEndElement();    //map
+
+        //zapsání barvy všech duchů do logu
+        xml_writer->writeStartElement("ghost_colors");
+        for(Entity* ghost : this->ghosts) {
+            xml_writer->writeStartElement("ghost");
+            xml_writer->writeAttribute("r", QString::number(std::get<0>(ghost->color)));
+            xml_writer->writeAttribute("g", QString::number(std::get<1>(ghost->color)));
+            xml_writer->writeAttribute("b", QString::number(std::get<2>(ghost->color)));
+            xml_writer->writeEndElement();    //ghost
+        }
+        xml_writer->writeEndElement();    //ghost_colors
 
         //začátek zapisování stavů
         xml_writer->writeStartElement("states");
@@ -446,6 +457,7 @@ void Game::elapsed_time_handler() {
 Loguje se:
     - pozice a sprite pacmana
     - pozice klíčů
+    - pozice duchů
 */
 void Game::logging_handler() {
     this->xml_writer->writeStartElement("state");
@@ -459,7 +471,6 @@ void Game::logging_handler() {
 
     //výpis informací o klíčích
     this->xml_writer->writeStartElement("keys");
-
     //vypíše informace o každém viditelném klíči do logu
     for(size_t i = 0; i < this->keys.size(); i++) {
         if(this->keys.at(i)->isVisible()) {
@@ -471,9 +482,18 @@ void Game::logging_handler() {
             this->xml_writer->writeEndElement();    //key
         }
     }
-
     this->xml_writer->writeEndElement();    //keys
-    
+
+    //výpis informacích o duších
+    this->xml_writer->writeStartElement("ghosts");
+    for(Entity* ghost : this->ghosts) {
+        this->xml_writer->writeStartElement("ghost");
+        this->xml_writer->writeAttribute("x", QString::number(ghost->x));
+        this->xml_writer->writeAttribute("y", QString::number(ghost->y));
+        // this->xml_writer->writeAttribute("sprite", ghost->current_pixmap_path);
+        this->xml_writer->writeEndElement();
+    }
+    this->xml_writer->writeEndElement();
 
     this->xml_writer->writeEndElement();    //state
 }
@@ -508,6 +528,17 @@ Replay::Replay(QString log_path) : Map_displayer() {
 
     this->load_static_map_elements(map_element.text());
 
+    //načtení barviček duchů
+    QDomElement ghost_colors = this->xml_doc.elementsByTagName("ghost_colors").at(0).toElement();
+    QDomElement ghost = ghost_colors.firstChildElement();
+    while(ghost.isNull() == false) {
+        int r = ghost.attribute("r").toInt();
+        int g = ghost.attribute("g").toInt();
+        int b = ghost.attribute("b").toInt();
+        this->ghost_colors.push_back({r, g, b});
+        ghost = ghost.nextSiblingElement();
+    }
+
     this->pacman = nullptr;
     this->backtracking = false;
     this->step_timer = new QTimer(this);
@@ -532,7 +563,8 @@ void Replay::initialize_entities() {
     //načtení elementů prvního kroku
     QDomElement pacman = step_items.at(0).toElement();
     QDomElement keys = step_items.at(1).toElement();
-    if(pacman.isNull() || keys.isNull()) {    //kontrola existence elementů
+    QDomElement ghosts = step_items.at(2).toElement();
+    if(pacman.isNull() || keys.isNull() || ghosts.isNull()) {    //kontrola existence elementů
         throw std::runtime_error("[ERR]: Missing element in state");
     }
 
@@ -543,7 +575,17 @@ void Replay::initialize_entities() {
 
     this->current_state = first_step;
 
-    //TODO duchové
+    //nastavení duchů
+    QDomElement ghost = ghosts.firstChildElement();
+    while(ghost.isNull() == false) {
+        QGraphicsPixmapItem* ghost_item = new QGraphicsPixmapItem(QPixmap("sprites/ghost_sprites/ghost_right.png"));
+        QPointF ghost_pos(ghost.attribute("x").toInt(), ghost.attribute("y").toInt());
+        ghost_item->setPos(ghost_pos);
+        this->ghosts.push_back(ghost_item);
+        this->addItem(ghost_item);
+        ghost = ghost.nextSiblingElement();
+    }
+
 }
 
 /**
@@ -645,8 +687,9 @@ void Replay::display_step(QDomElement& step) {
     //načtení elementů kroku
     QDomElement pacman = step_items.at(0).toElement();
     QDomElement keys = step_items.at(1).toElement();
+    QDomElement ghosts = step_items.at(2).toElement();
 
-    if(pacman.isNull() || keys.isNull()) {    //kontrola existence elementů
+    if(pacman.isNull() || keys.isNull() || ghosts.isNull()) {    //kontrola existence elementů
         throw std::runtime_error("[ERR]: Missing element in state");
     }
 
@@ -658,6 +701,15 @@ void Replay::display_step(QDomElement& step) {
 
     //zpracuj změnu klíčů
     handle_key_change(keys);
+
+    //nastavení pozice duchů
+    QDomElement ghost = ghosts.firstChildElement();
+    for(size_t i = 0; i < this->ghosts.size(); i++) {
+        QPointF new_ghost_pos(ghost.attribute("x").toInt(), ghost.attribute("y").toInt());
+        this->ghosts.at(i)->setPos(new_ghost_pos);
+        ghost = ghost.nextSiblingElement();
+    }
+
 }
 
 void Replay::start() {

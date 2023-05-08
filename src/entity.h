@@ -22,6 +22,7 @@ class Entity : public QGraphicsPixmapItem{
 
     std::vector<entity_direction> path;
     entity_direction last_path;
+    std::tuple<int, int, int> color;
 
     private:
     entity_direction direction;

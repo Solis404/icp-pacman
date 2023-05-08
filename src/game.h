@@ -118,7 +118,8 @@ class Replay : public Map_displayer {
     ~Replay();
 
     QGraphicsPixmapItem* pacman;
-    // std::vector<QGraphicsPixmapItem*> ghosts;
+    std::vector<QGraphicsPixmapItem*> ghosts;
+    std::vector<std::tuple<int, int, int>> ghost_colors;
 
     QTimer* step_timer;
     bool backtracking;

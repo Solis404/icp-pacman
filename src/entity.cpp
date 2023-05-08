@@ -3,12 +3,12 @@
 #include "src/utils.h"
 #include <QFile>
 
+const int GHOST_SHARED = 5;
+
 /**
 Proměnná ukládající jména souborů se sprajty animovaného pacmana
 Uděláno tak, že lze indexovat pomocí enumu entity_direction `pacman_sprite_files[direction][N]`
 */
-const int GHOST_SHARED = 5;
-
 const QString pacman_sprite_files[5][PACMAN_SPRITES] {
     {"sprites/pacman_sprites/right0.png",
      "sprites/pacman_sprites/right1.png",
@@ -79,6 +79,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixm
     //inicializuje grafickou reprezentaci entity s počátečním sprajtem
     get_color_sprites();
     this->setPixmap(*ghost_sprites[entity_direction::right]);
+    this->current_pixmap_path = ghost_sprites_shared[entity_direction::stopped];
 }
 
 int Entity::get_random_int(int min, int max)
@@ -112,8 +113,7 @@ void Entity::get_color_sprites()
     g = get_random_int(0, 255);
     b = get_random_int(0, 255);
 
-
-    //TODO implement color saving
+    this->color = {r, g, b};
     
     cb_painter.fillRect(colored_body->rect(), QColor(r, g, b));
     cb_painter.end();
@@ -175,6 +175,7 @@ void Entity::set_next_sprite(entity_direction dir) {
             break;
         case ghost:
             new_sprite_pixmap = QPixmap(*ghost_sprites[dir]);
+            this->current_pixmap_path = ghost_sprites_shared[dir];
             break;
     }
 

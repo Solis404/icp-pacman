@@ -10,9 +10,9 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
     Game* my_game;
-    /* Replay* my_game; */
+    // Replay* my_game;
     try{
-        /* my_game = new Replay("logfile.xml"); */
+        // my_game = new Replay("logfile.xml");
         my_game = new Game("map.txt", "logfile.xml");
 
     } catch(std::runtime_error& e) {
@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    /* my_game->initialize_entities(); */
+    // my_game->initialize_entities();
     my_game->start();
 
     QGraphicsView view(my_game);
