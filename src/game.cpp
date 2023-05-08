@@ -41,15 +41,15 @@ Načte z řetězce představující mapu všechny políčka kromě duchů a pacm
 */
 void Map_displayer::load_static_map_elements(QString map) {
     //načtení výšky a šířky mapy
-    QTextStream input = QTextStream(&map);    //Stream pro čtení
+    QTextStream* input = new QTextStream(&map);    //Stream pro čtení
 
-    input >> this->map_height;
-    input >> this->map_width;
+    *(input) >> this->map_height;
+    *(input) >> this->map_width;
     if(map_height == 0 || map_width == 0) {
         throw std::runtime_error("Invalid map size");
     }
     
-    input.readLine();    //dočtení řádku do konce
+    input->readLine();    //dočtení řádku do konce
 
     //ve skutečnosti ještě mapu obklopuje neuvedená zeď
     map_height += 2;
@@ -62,10 +62,10 @@ void Map_displayer::load_static_map_elements(QString map) {
     size_t finish_num = 0;
     size_t start_num = 0;
     for(unsigned i = 1; i < map_height - 1; i++) {
-        if(input.atEnd()) {    //předčasně ukončená mapa, nesouhlasí výška
+        if(input->atEnd()) {    //předčasně ukončená mapa, nesouhlasí výška
             throw std::runtime_error("Malformed map data");
         }
-        QString line = input.readLine();
+        QString line = input->readLine();
         if(static_cast<unsigned>(line.size()) != map_width - 2) {
             throw std::runtime_error("Garbage data after line in map data");
         }
@@ -144,6 +144,8 @@ void Map_displayer::load_static_map_elements(QString map) {
 
     //nastavení černého pozadí
     this->setBackgroundBrush(Qt::black);
+
+    delete input;
 }
 
 
@@ -270,8 +272,8 @@ Nekontroluje správnost mapy, určen k volání po načtení statických polože
 void Game::load_dynamic_map_elements(QString map_string) {
 
     //načtení výšky a šířky mapy
-    QTextStream input = QTextStream(&map_string);    //Stream pro čtení
-    input.readLine();    //zahodí první řádek (velikost mapy)
+    QTextStream* input = new QTextStream(&map_string);    //Stream pro čtení
+    input->readLine();    //zahodí první řádek (velikost mapy)
 
     this->map_representation = new Logic_map(map_width, map_height);
     Entity *ghost;
@@ -279,7 +281,7 @@ void Game::load_dynamic_map_elements(QString map_string) {
     //nastavení mapy podle předlohy ze souboru
     //čtení každého řádku
     for(unsigned i = 1; i < map_height - 1; i++) {
-        QString line = input.readLine();
+        QString line = input->readLine();
         unsigned line_index = 0;
         for(unsigned j = 1; j < map_width - 1; j++) {
             QChar character = line.at(line_index);
@@ -316,6 +318,8 @@ void Game::load_dynamic_map_elements(QString map_string) {
     for(uint i = 0; i < this->ghosts.size(); i++) {
         this->addItem(this->ghosts[i]);
     }
+
+    delete input;
 }
 
 /**
