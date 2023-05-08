@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 
     QApplication app(argc, argv);
     
-    Ui_MainWindow mwin = Ui_MainWindow(&app);
+    Ui_MainWindow mwin(&app);
     mwin.MainWindow->show();
 
     return app.exec();
