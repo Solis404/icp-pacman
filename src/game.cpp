@@ -368,7 +368,7 @@ void Game::start() {
     this->play_timer->start(1000);    //interval 1s
     this->state = game_state::playing;
 
-    int GHOST_MOVEMENT_DELAY = PACMAN_MOVEMENT_DELAY * 50;
+    int GHOST_MOVEMENT_DELAY = PACMAN_MOVEMENT_DELAY * 25;
     for(uint i = 0; i < this->ghost_timers.size(); i++)
     {
         this->ghost_timers[i]->start(GHOST_MOVEMENT_DELAY);
@@ -803,11 +803,26 @@ void Replay::keyPressEvent(QKeyEvent *keyEvent) {
 */
 Replay::~Replay() {}
 
+/**
+@brief Funkce na vypocitani ceny f pro uzel 'a' kdyz cil je uzel 'b'
+
+@param a - Uzel a jako par cisel
+@param b - Uzel b jako par cisel
+@return F cena uzlu
+*/
 int calc_fcost(Cords a, Cords b, int gcost)
 {
     return 10*(std::abs(a.first - b.first) + std::abs(a.second - b.second)) + gcost;
 }
 
+/**
+@brief Funkce ktera expanduje dany uzel
+
+@param path_nodes - Vector vsech neexpandovanych uzlu
+@param goal_cords - Cilovy uzel
+@param parent_cords - Otcovsky uzel
+@param gcost - G cena nynejsiho uzlu
+*/
 void expand_node(std::vector<Path_node> *path_nodes, Cords goal_cords,Cords expanded_cords, Cords parent_cords, int gcost)
 {
         int new_fcost = calc_fcost(expanded_cords, goal_cords, gcost);
@@ -831,6 +846,13 @@ void expand_node(std::vector<Path_node> *path_nodes, Cords goal_cords,Cords expa
         path_nodes->push_back(new_node);
 }
 
+/**
+@brief Funkce ktera se zavola na konec a sestroji cestu z vyuzitych uzlu
+
+@param checked_nodes - Vektor pouzitych uzlu
+@param last_cords - Konecny uzel
+@return Vector smeru ktery duch musi udelat aby se dostal k pacmanovi
+*/
 std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_nodes, Cords last_cords)
 {
     static std::vector<entity_direction> final_direction;
@@ -888,6 +910,13 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
     return get_final_path(checked_nodes, parent_cords);
 }
 
+/**
+@brief Funkce ktera zjisti jestli uzel je uz pouzity
+
+@param checked_nodes - Vektor pouzitych uzlu
+@param node_cords - Uzel ktery resime
+@return Jestli je uzel v checked_nodes
+*/
 bool in_checked_nodes(std::vector<Path_node> checked_nodes, Cords node_cords)
 {
     for(auto i: checked_nodes)
@@ -900,6 +929,13 @@ bool in_checked_nodes(std::vector<Path_node> checked_nodes, Cords node_cords)
     return false;
 }
 
+/**
+@brief Funkce ktera zjisti jestli uzel se da expandovat
+
+@param c - Uzel ktery resime
+@param checked_nodes - Vektor pouzitych uzlu
+@return Jestli je uzel expandovatelny
+*/
 bool Game::expandable(Cords c, std::vector<Path_node> checked_nodes)
 {
     bool in_ch_nodes = in_checked_nodes(checked_nodes, Cords(c.first, c.second));
@@ -910,6 +946,13 @@ bool Game::expandable(Cords c, std::vector<Path_node> checked_nodes)
     return false;
 }
 
+/**
+@brief Hlavni funkce pro pathfinding pomoci algoritmu A*
+
+@param path_nodes - Vsechny uzly co jeste nebyli expandovane
+@param end_cords - Posledni uzel v ceste
+@return Vector smeru ktery duch musi udelat aby se dostal k pacmanovi
+*/
 std::vector<entity_direction> Game::ghost_pathfind(std::vector<Path_node> *path_nodes, Cords end_cords)
 {
     std::sort(path_nodes->begin(), path_nodes->end());
@@ -970,6 +1013,10 @@ std::vector<entity_direction> Game::ghost_pathfind(std::vector<Path_node> *path_
     return Game::ghost_pathfind(path_nodes, end_cords);
 }
 
+/**
+@brief Funkce ktera se stara o pathfinding vsech existujicich duchu
+
+*/
 void Game::ghost_pathfind_handler()
 {
     // find ghost index

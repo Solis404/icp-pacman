@@ -90,6 +90,12 @@ Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixm
     }
 }
 
+/**
+@brief Ziskani pseudo nahodneho cisla
+
+@param min - Spodni hranice generovaneho cisla
+@param max - Vrchni hranice generovaneho cisla
+*/
 int Entity::get_random_int(int min, int max)
 {
     max += 1;
@@ -99,6 +105,9 @@ int Entity::get_random_int(int min, int max)
     return min + (rand_num % max);
 }
 
+/**
+@brief Funkce na vygenerovani nahoden barvy a spritu s tou barvou pro kazdeho ducha
+*/
 void Entity::get_color_sprites()
 {
     QPixmap sprite_body, sprite_eyes, *new_sprite = nullptr;

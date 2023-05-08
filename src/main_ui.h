@@ -1,10 +1,11 @@
-/********************************************************************************
-** Form generated from reading UI file 'title_menuoMELtH.ui'
-**
-** Created by: Qt User Interface Compiler version 5.15.9
-**
-** WARNING! All changes made in this file will be lost when recompiling UI file!
-********************************************************************************/
+/**
+@file
+
+@brief Obshuje definice třídy Ui_MainWindow
+
+Autoři: Patrik Uher (xuherp02)
+Vygenerovano programem QTDesigner
+*/
 
 #ifndef TITLE_MENUOMELTH_H
 #define TITLE_MENUOMELTH_H

@@ -1,6 +1,18 @@
+/**
+@file
+
+@brief Obshuje definice metod pro tridu Ui_MainWindow
+
+Autoři: Patrik Uher (xuherp02)
+Vygenerovano programem QTDesigner
+*/
 #include "main_ui.h"
 #include "src/game.h"
 
+/**
+@brief Konstruktor pro objekt tridy Ui_MainWindow
+@param app - QT applikace
+*/
 Ui_MainWindow::Ui_MainWindow(QApplication *app)
 {
     this->app = app;
@@ -12,11 +24,17 @@ Ui_MainWindow::Ui_MainWindow(QApplication *app)
     connect(this->pushButton, SIGNAL(clicked()), this, SLOT(start_slot()));
 }
 
+/**
+@brief Slot ktery vypina applikaci QT
+*/
 void Ui_MainWindow::exit_slot()
 {
     this->app->exit(0);
 }
 
+/**
+@brief Slot ktery se zpousti po dokonceni hry
+*/
 void Ui_MainWindow::return_from_game(game_result result)
 {
     qInfo() << "result: " << (result ? "Defeat!" : "Victory!");
@@ -26,6 +44,9 @@ void Ui_MainWindow::return_from_game(game_result result)
     this->MainWindow->show();
 }
 
+/**
+@brief Slot ktery se zpousti po dokonceni hry spoustene pres replay
+*/
 void Ui_MainWindow::return_from_replay()
 {
     this->view->hide();
@@ -34,6 +55,9 @@ void Ui_MainWindow::return_from_replay()
     this->MainWindow->show();
 }
 
+/**
+@brief Slot ktery se zapina hru. Zpousti se pres clicked eventem
+*/
 void Ui_MainWindow::start_slot()
 {
     QString selected_file = QFileDialog::getOpenFileName(this->MainWindow, "Select Map");
@@ -60,6 +84,9 @@ void Ui_MainWindow::start_slot()
     view->show();
 }
 
+/**
+@brief Slot ktery se zapina replay. Zpousti se pres clicked eventem
+*/
 void Ui_MainWindow::replay_slot()
 {
     QString selected_file = QFileDialog::getOpenFileName(this->MainWindow, "Select Replay", "", tr("XML files (*.xml)"));
@@ -83,6 +110,9 @@ void Ui_MainWindow::replay_slot()
     view->show();
 }
 
+/**
+@brief Generovana funkce ktera pojmenuje elementy v QMainWindow
+*/
 void Ui_MainWindow::retranslateUi()
 {
     MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Pacman-esque Game", nullptr));
@@ -93,6 +123,9 @@ void Ui_MainWindow::retranslateUi()
     label->setText(QString());
 }
 
+/**
+@brief Generovana funkce ktera vytvori cely main window
+*/
 void Ui_MainWindow::setupUi()
 {
     if (this->MainWindow->objectName().isEmpty())
