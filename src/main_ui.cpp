@@ -61,7 +61,10 @@ void Ui_MainWindow::return_from_replay()
 void Ui_MainWindow::start_slot()
 {
     QString selected_file = QFileDialog::getOpenFileName(this->MainWindow, "Select Map");
-    qInfo() << "file: " << selected_file;
+
+    if(selected_file.isNull()) {
+        return;
+    }
     
     QString curr_time = QDateTime::currentDateTime().toString();
     QString log_file_name = QString("logfile-");
@@ -90,7 +93,10 @@ void Ui_MainWindow::start_slot()
 void Ui_MainWindow::replay_slot()
 {
     QString selected_file = QFileDialog::getOpenFileName(this->MainWindow, "Select Replay", "", tr("XML files (*.xml)"));
-    qInfo() << "file: " << selected_file;
+
+    if(selected_file.isNull()) {
+        return;
+    }
 
     try{
         this->my_replay = new Replay(selected_file);
