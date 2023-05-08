@@ -6,3 +6,4 @@ pacman
 *.o
 moc_*.*
 doc/html/**
+valgrind_report
