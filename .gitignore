@@ -7,3 +7,4 @@ pacman
 moc_*.*
 doc/html/**
 valgrind_report
+*.xml
