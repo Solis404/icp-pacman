@@ -1,3 +1,11 @@
+/**
+@file game.cpp
+
+@brief Definice funkcí a atributů pro třídy reprezentující herní logiku, přehrávání
+
+Autoři: Robin Volf (xvolfr00), Patrik Uher (xuherp02)
+*/
+
 #include "game.h"
 #include "qnamespace.h"
 #include "qobject.h"
@@ -509,7 +517,7 @@ void Game::logging_handler() {
 
 /**
 @brief Konstruktor třídy Replay, vytvoří hru z logu
-@param QString log_path - Cesta k souboru s logem
+@param log_path - Cesta k souboru s logem
 
 Načte statické elementy z logu
 
@@ -554,8 +562,7 @@ Replay::Replay(QString log_path) : Map_displayer() {
 }
 
 /**
-@brief Inicializuje entity (pacmana a duchy) TODO(duchové)
-
+@brief Inicializuje entity (pacmana a duchy)
 
 Načte z prvního kroku pozici pacmana a duchů a zařadí je do scény. Inicializuje také
 atribut states.
@@ -608,7 +615,7 @@ void Replay::initialize_entities() {
 
 /**
 @brief Metoda, která zajistí změnu klíčů (schování/odkrytí), pokud je třeba
-@param QDomElement& keys - Parent element klíčů z xml logu
+@param keys - Parent element klíčů z xml logu
 */
 void Replay::handle_key_change(QDomElement& keys) {
     std::vector<Map_item*> visible_keys;
@@ -630,8 +637,8 @@ void Replay::handle_key_change(QDomElement& keys) {
 
 /**
 @brief Funkce pro nalezení klíče, který se vyskytuje ve visible keys a zároveň se nevyskytuje v log_keys
-@param std::vector<Map_item *>& visible_keys - vektor viditelných klíčů
-@param QDomElement& log_keys - Element obsahující klíče z logu
+@param visible_keys - vektor viditelných klíčů
+@param log_keys - Element obsahující klíče z logu
 @return Vrací ukazatel na přebytečný klíč
 */
 Map_item* Replay::find_surplus_key(std::vector<Map_item *>& visible_keys, QDomElement& log_keys) {
@@ -659,8 +666,8 @@ Map_item* Replay::find_surplus_key(std::vector<Map_item *>& visible_keys, QDomEl
 
 /**
 @brief Funkce pro nalezení klíče, který se vyskytuje v log keys a zároveň se nevyskytuje ve visible_keys
-@param std::vector<Map_item *>& visible_keys - vektor viditelných klíčů
-@param QDomElement& log_keys - Element obsahující klíče z logu
+@param visible_keys - vektor viditelných klíčů
+@param log_keys - Element obsahující klíče z logu
 @return Vrací ukazatel na klíč, který chybí ve visible_keys
 */
 Map_item* Replay::find_missing_key(std::vector<Map_item *>& visible_keys, QDomElement& log_keys) {
@@ -697,7 +704,7 @@ Map_item* Replay::find_missing_key(std::vector<Map_item *>& visible_keys, QDomEl
 
 /**
 @brief Metoda pro zobrazení kroku na mapě
-@param QDomNode step - Krok z xml logu, který se má zobrazit
+@param step - Krok z xml logu, který se má zobrazit
 */
 void Replay::display_step(QDomElement& step) {
     QDomNodeList step_items = step.childNodes(); 
@@ -732,6 +739,9 @@ void Replay::display_step(QDomElement& step) {
 
 }
 
+/**
+@brief Metoda pro spuštění přehrávání hry z logu
+*/
 void Replay::start() {
     connect(this->step_timer, SIGNAL(timeout()), this, SLOT(step_handler()));
     this->step_timer->start(REPLAY_MOVEMENT_DELAY);
@@ -1005,6 +1015,13 @@ void Game::ghost_pathfind_handler()
     }
 }
 
+/**
+@brief Metoda pro získání vektoru sprajtů s příslušnou barvou (RGB)
+@param r - Číslo reprezentující červenou intenzitu barvy
+@param g - Číslo reprezentující zelenou intenzitu barvy
+@param b - Číslo reprezentující modrou intenzitu barvy
+@return Vrací vektor se sprajty
+*/
 std::vector<QPixmap *> Replay::initialize_ghost_sprites(int r, int g, int b) {
     QPixmap sprite_body, sprite_eyes, *new_sprite = nullptr;
     QBitmap mask;

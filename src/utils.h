@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Obshuje definice maker pro nastavení různých parametrů hry a using deklarací.
+
+Autoři: Robin Volf (xvolfr00) Patrik Uher (xuherp02)
+*/
 #ifndef UTILS_H
 #define UTILS_H
 #include <QDebug>

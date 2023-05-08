@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Definice metod třídy Entity a konstant s ní spojených (cesty k sprajtům, atd.)
+
+Autoři: Robin Volf (xvolfr00), Patrik Uher (xuherp02)
+*/
 #include "entity.h"
 #include "qgraphicsitem.h"
 #include "src/utils.h"

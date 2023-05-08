@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Obshuje definice metod třídy Logic_map
+
+Autoři: Robin Volf (xvolfr00)
+*/
 #include "logic_map.h"
 
 /**

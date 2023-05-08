@@ -1,3 +1,11 @@
+/**
+@file game.h
+
+@brief Definice Tříd reprezentující herní logiku a zpětné přehrávání. Obsahuje také
+výčtové typy spojené s nimi.
+
+Autoři: Robin Volf (xvolfr00), Patrik Uher (xuherp02)
+*/
 #ifndef GAME_H
 #define GAME_H
 
@@ -119,15 +127,15 @@ class Replay : public Map_displayer {
     Replay(QString log_path);
     ~Replay();
 
-    QGraphicsPixmapItem* pacman;
-    std::vector<Entity*> ghosts;
-    std::vector<std::tuple<int, int, int>> ghost_colors;
+    QGraphicsPixmapItem* pacman;    ///< Ukazatel na pacmana
+    std::vector<Entity*> ghosts;    ///< Vektor ukazatelů na duchy
+    std::vector<std::tuple<int, int, int>> ghost_colors;    ///< Vektor barev duchů
 
-    QTimer* step_timer;
-    bool backtracking;
+    QTimer* step_timer;    ///< Časovač pro krokování hry
+    bool backtracking;    ///< Boolean reprezentující, zda-li se právě vrací (zpětně přehrává)
 
-    QDomDocument xml_doc;
-    QDomElement current_state;
+    QDomDocument xml_doc;    ///< DOM dokumentace logu
+    QDomElement current_state;    ///< Právě zobrazovaný stav hry
 
     void display_step(QDomElement& step);
     void handle_key_change(QDomElement& keys);

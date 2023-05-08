@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Obshuje definice metod třídy Path_node
+
+Autoři: Patrik Uher (xuherp02)
+*/
 #include "path_node.h"
 
 Path_node::Path_node(Cords cords, Cords parent_cords, int fcost)

@@ -1,3 +1,10 @@
+/**
+@file
+
+@brief Definice Třídy Entity a s ní spojovaných výčtových typů
+
+Autoři: Robin Volf (xvolfr00), Patrik Uher (xuherp02)
+*/
 #ifndef ENTITY_H
 #define ENTITY_H
 #include<QGraphicsPixmapItem>
