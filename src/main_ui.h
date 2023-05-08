@@ -45,7 +45,8 @@ class Ui_MainWindow: QObject
     void exit_slot();
     void start_slot();
     void replay_slot();
-    void return_menu(game_result result);
+    void return_from_game(game_result result);
+    void return_from_replay();
 };
 
 #endif // TITLE_MENUOMELTH_H

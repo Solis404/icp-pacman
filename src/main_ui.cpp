@@ -17,12 +17,20 @@ void Ui_MainWindow::exit_slot()
     this->app->exit(0);
 }
 
-void Ui_MainWindow::return_menu(game_result result)
+void Ui_MainWindow::return_from_game(game_result result)
 {
     qInfo() << "result: " << (result ? "Defeat!" : "Victory!");
     this->view->hide();
-    /* delete this->view; */
-    /* delete this->my_game; */
+    delete this->view;
+    delete this->my_game;
+    this->MainWindow->show();
+}
+
+void Ui_MainWindow::return_from_replay()
+{
+    this->view->hide();
+    delete this->view;
+    delete this->my_replay;
     this->MainWindow->show();
 }
 
@@ -48,7 +56,7 @@ void Ui_MainWindow::start_slot()
     QGraphicsView *view = new QGraphicsView(this->my_game);
     this->view = view;
     this->MainWindow->hide();
-    connect(this->my_game, SIGNAL(game_over(game_result)), this, SLOT(return_menu(game_result)));
+    connect(this->my_game, SIGNAL(game_over(game_result)), this, SLOT(return_from_game(game_result)));
     view->show();
 }
 
@@ -71,6 +79,7 @@ void Ui_MainWindow::replay_slot()
     QGraphicsView *view = new QGraphicsView(this->my_replay);
     this->view = view;
     this->MainWindow->hide();
+    connect(this->my_replay, SIGNAL(log_over()), this, SLOT(return_from_replay()));
     view->show();
 }
 
