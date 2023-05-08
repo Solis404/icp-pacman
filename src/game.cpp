@@ -329,13 +329,13 @@ void Game::keyPressEvent(QKeyEvent *keyEvent) {
             this->desired_pacman_direction = entity_direction::up;
             break;
         case Qt::Key_A:
-            this->desired_pacman_direction = entity_direction::left;
+            this->desired_pacman_direction = entity_direction::left_dir;
             break;
         case Qt::Key_S:
             this->desired_pacman_direction = entity_direction::down;
             break;
         case Qt::Key_D:
-            this->desired_pacman_direction = entity_direction::right;
+            this->desired_pacman_direction = entity_direction::right_dir;
             break;
     }
 }
@@ -858,12 +858,12 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
     if(((parent_cords.first - last_cords.first) == -1) && ((parent_cords.second-last_cords.second) == 0))
     {
         //right
-        final_direction.push_back(entity_direction::right);
+        final_direction.push_back(entity_direction::right_dir);
     }
     else if (((parent_cords.first - last_cords.first) == 1) && ((parent_cords.second-last_cords.second) == 0))
     {
         //left
-        final_direction.push_back(entity_direction::left);
+        final_direction.push_back(entity_direction::left_dir);
     }
     else if (((parent_cords.first - last_cords.first) == 0) && ((parent_cords.second-last_cords.second) == -1))
     {

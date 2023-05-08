@@ -19,7 +19,7 @@ extern const QString ghost_body_temp;
 extern const QString ghost_sprites_shared[];
 
 enum entity_type {pacman = 10, ghost};    //začátek od 10, aby nedošlo k interferenci mezi typem entity a objektem na mapě (map_item)
-enum entity_direction {right, left, up, down, stopped};
+enum entity_direction {right_dir, left_dir, up, down, stopped};
 
 /**
 @brief Třída reprezentující pohyblivé entity na mapě

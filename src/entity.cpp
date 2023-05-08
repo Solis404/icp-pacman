@@ -85,7 +85,7 @@ Entity::Entity(entity_type type, unsigned x, unsigned y, int id) : QGraphicsPixm
 
         //inicializuje grafickou reprezentaci entity s počátečním sprajtem
         get_color_sprites();
-        this->setPixmap(*ghost_sprites[entity_direction::right]);
+        this->setPixmap(*ghost_sprites[entity_direction::right_dir]);
         this->current_pixmap_path = ghost_sprites_shared[entity_direction::stopped];
     }
 }
@@ -210,8 +210,8 @@ Za zatočení se považuje změna směru, která není couvání
 */
 bool Entity::would_turn(entity_direction dir) {
     switch(this->direction) {
-        case entity_direction::right:
-        case entity_direction::left:
+        case entity_direction::right_dir:
+        case entity_direction::left_dir:
             if(dir == up || dir == down) {
                 return true;
             } else {
@@ -219,7 +219,7 @@ bool Entity::would_turn(entity_direction dir) {
             }
         case entity_direction::up:
         case entity_direction::down:
-            if(dir == entity_direction::right || dir == entity_direction::left) {
+            if(dir == entity_direction::right_dir || dir == entity_direction::left_dir) {
                 return true;
             } else {
                 return false;
@@ -255,10 +255,10 @@ bool Entity::movement_handler(entity_direction dir, QGraphicsScene* scene) {
     //vyrobení bodu pro vyzkoušení kolize
     QPointF probe(this->x, this->y);
     switch(dir) {
-        case entity_direction::right:
+        case entity_direction::right_dir:
             probe.rx() += SPRITE_SIZE;
         break;
-        case entity_direction::left:
+        case entity_direction::left_dir:
             probe.rx() -= 1;
         break;
         case entity_direction::down:
@@ -296,11 +296,11 @@ void Entity::move(entity_direction dir) {
     int dx;
     int dy;
     switch(dir) {
-        case entity_direction::right:
+        case entity_direction::right_dir:
             dx = 1;
             dy = 0;
             break;
-        case entity_direction::left:
+        case entity_direction::left_dir:
             dx = -1;
             dy = 0;
             break;
