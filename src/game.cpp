@@ -266,6 +266,7 @@ void Game::load_dynamic_map_elements(QString map_string) {
                 case 'G':
                     this->map_representation->set_tile(j, i, road);
                     ghost = new Entity(entity_type::ghost, j * SPRITE_SIZE, i * SPRITE_SIZE, ghost_id);
+                    ghost->last_path = entity_direction::stopped;
                     this->ghosts.push_back(ghost);
                     this->ghost_id++;
                     break;
@@ -418,10 +419,13 @@ void Game::pacman_interaction_handler() {
 void Game::ghost_movement_handler() {
     for(Entity* ghost : this->ghosts) {
         if(ghost->path.empty()) {
+            ghost->movement_handler(ghost->last_path, this);
             continue;
         }
 
         ghost->movement_handler(ghost->path.front(), this);
+        ghost->last_path = ghost->path.front();
+
         ghost->path.erase(ghost->path.begin());
     }
 }
