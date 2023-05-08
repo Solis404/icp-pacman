@@ -27,7 +27,7 @@
 - prvky s kterými pacman interreaguje:
   1. klíče, může je sebrat
   2. cíl, pokud dojde do cíle a všechny klíče jsou sebrané, hra končí úspěchem
-  3. TODO - duchové
+  3. duchové - snaží se dotknout pacmana a při doteku jej okamžitě zabijí
 
 ### Logování
 - hra lze spustit v logovacím režimu, potom se průběh hry ukládá do souboru a jde zpětně přehrát
