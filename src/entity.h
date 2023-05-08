@@ -21,6 +21,7 @@ class Entity : public QGraphicsPixmapItem{
     QString current_pixmap_path;
 
     std::vector<entity_direction> path;
+    entity_direction last_path;
 
     private:
     entity_direction direction;
