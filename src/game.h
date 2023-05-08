@@ -54,7 +54,7 @@ enum game_state{init, playing, paused, finished};
 
 Dědí od QT třídy QGraphicsScene, tudíž v sobě zakomponovává i grafickou reprezentaci,
 kterou lze vizualizovat pomocí QGraphicsView. Při její konstrukci dojde k vytvoření
-mapy. Metodou start() se hra spustí a TODO
+mapy. Metodou start() se hra spustí
 */
 class Game : public Map_displayer {
     Q_OBJECT
