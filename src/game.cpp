@@ -10,17 +10,26 @@
 #include <utility>
 #include <vector>
 
+/**
+@brief Konstruktor, vyrobí prázdnou mapu
+*/
 Map_displayer::Map_displayer() : QGraphicsScene() {
     this->keys_needed = 0;
     this->map_height = 0;
     this->map_width = 0;
 }
 
+/**
+@brief Destruktor
+*/
 Map_displayer::~Map_displayer(){}
 
 /**
 @brief Metoda pro načtení statických položek mapy (políčka)
-@param QString map - Řetězec představující mapu
+
+Načte z řetězce představující mapu všechny políčka kromě duchů a pacmana
+
+@param map - Řetězec představující mapu
 */
 void Map_displayer::load_static_map_elements(QString map) {
     //načtení výšky a šířky mapy
@@ -134,8 +143,8 @@ void Map_displayer::load_static_map_elements(QString map) {
 
 /**
 @brief Konstruktor, který vytvoří hru, volitelně s logováním
-@param QString map_path - Cesta, kde je vstupní soubor s mapou
-@param QString log_path - Cesta, kam se má uložit soubor s logováním, pokud není uveden,
+@param map_path - Cesta, kde je vstupní soubor s mapou
+@param log_path - Cesta, kam se má uložit soubor s logováním, pokud není uveden,
 k logování nedojde
 @note Může vyhodit vyjímku std::runtime_error v případě neplatných vstupních dat
 */
@@ -289,7 +298,7 @@ void Game::load_dynamic_map_elements(QString map_string) {
                     break;
                 case 'S':
                     this->map_representation->set_tile(j, i, map_item_type::start);
-                    this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE);
+                    this->pacman = new Entity(entity_type::pacman, j * SPRITE_SIZE, i * SPRITE_SIZE, 0);
                     this->addItem(this->pacman);
                     break;
             }

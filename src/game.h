@@ -20,7 +20,9 @@
 #include "path_node.h"
 
 /**
-Třída, uchovávající společné elementy Hry samotné a Replaye
+@brief Třída, uchovávající společné elementy Hry samotné a Replaye
+
+Umožňuje vizualizovat mapu s pomocí z řetězce specifikovaným protokolem pro mapu v zadání.
 */
 class Map_displayer : public QGraphicsScene {
     public:
@@ -28,11 +30,11 @@ class Map_displayer : public QGraphicsScene {
     ~Map_displayer();
     void load_static_map_elements(QString map);
 
-    unsigned map_height;
-    unsigned map_width;
+    unsigned map_height;    ///< Výška mapy
+    unsigned map_width;    ///< Šířka mapy
 
-    size_t keys_needed;
-    std::vector<Map_item*> keys;
+    size_t keys_needed;    ///< Počet klíčů, které jsou ještě potřeba pro vstup do cíle
+    std::vector<Map_item*> keys;    ///< Vektor klíčů
 };
 
 //Výčtové typy pro indikaci různých stavů hry/informací o hře
@@ -50,28 +52,28 @@ class Game : public Map_displayer {
     Q_OBJECT
     
     public:
-    game_state state;
+    game_state state;    ///< Stav hry
 
     private:
-    Logic_map *map_representation;
-    std::vector<Entity *> ghosts;
-    std::vector<QTimer *> ghost_timers;
-    int ghost_id;
-    entity_direction desired_pacman_direction;
+    Logic_map *map_representation;    ///< Logická reprezantace mapy použitá pro pathfinding
+    std::vector<Entity *> ghosts;    ///< Vektor duchů ve hřa
+    std::vector<QTimer *> ghost_timers;    ///< Vektor časovačů pro přepočítání pathfindingu duchů
+    int ghost_id;    ///< generátor id pro duchy
+    entity_direction desired_pacman_direction;    ///< Hráčem požadovaný směr pacmana
 
-    size_t keys_acquired; 
+    size_t keys_acquired;    ///< Počet zatím získaných klíčů
 
-    QTimer* movement_timer;
-    QTimer* play_timer;
-    QTime elapsed_time;
+    QTimer* movement_timer;    ///< Časovač řídící pohyb entit
+    QTimer* play_timer;    ///< Časovač pro updatování počítadla odehraného času
+    QTime elapsed_time;    ///< Proměnná reprezentující odehraný čas
 
-    Entity* pacman;
+    Entity* pacman;    ///< Ukazatel na pacmana ve hře
 
-    QGraphicsSimpleTextItem* elapsed_time_item;    //zobrazovaný čas
-    QGraphicsSimpleTextItem* key_counter;    //zobrazované počítadlo klíčů
+    QGraphicsSimpleTextItem* elapsed_time_item;    ///< Zobrazovaný čas
+    QGraphicsSimpleTextItem* key_counter;    ///< Zobrazované počítadlo klíčů
 
-    QFile* log_file;    //soubor pro logování
-    QXmlStreamWriter* xml_writer;    //stream writer vypisující log
+    QFile* log_file;    ///< Soubor pro logování
+    QXmlStreamWriter* xml_writer;    ///< Stream writer vypisující log
 
     public:
     //konstruktor, destruktor
