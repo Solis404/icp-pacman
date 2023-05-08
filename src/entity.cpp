@@ -1,6 +1,7 @@
 #include "entity.h"
 #include "qgraphicsitem.h"
 #include "src/utils.h"
+#include <QFile>
 
 /**
 Proměnná ukládající jména souborů se sprajty animovaného pacmana
@@ -91,7 +92,7 @@ int Entity::get_random_int(int min, int max)
 
 void Entity::get_color_sprites()
 {
-    QPixmap sprite_body, sprite_eyes;
+    QPixmap sprite_body, sprite_eyes, *new_sprite = nullptr;
     QBitmap mask;
     int r = 0, g = 0, b = 0;
     
@@ -118,18 +119,28 @@ void Entity::get_color_sprites()
     cb_painter.fillRect(colored_body->rect(), QColor(r, g, b));
     cb_painter.end();
     
-    QPixmap *new_sprite = new QPixmap(colored_body->size());
-    new_sprite->fill(Qt::transparent);
+    for(int i = 0; i < GHOST_SHARED; i++)
+    {
+        if(i == entity_direction::stopped)
+        {
+            // create a copy of right sprite to have a sprite for the stopped direction
+            this->ghost_sprites.push_back(this->ghost_sprites[0]);
+            continue;
+        }
 
-    QPainter ns_painter(new_sprite);
-    
-    ns_painter.drawPixmap(0, 0, *colored_body);
-    ns_painter.drawPixmap(0, 0, sprite_eyes);
-    ns_painter.end();
+        new_sprite = new QPixmap(colored_body->size());
+        new_sprite->fill(Qt::transparent);
+
+        QPainter ns_painter(new_sprite);
+        
+        ns_painter.drawPixmap(0, 0, *colored_body);
+        ns_painter.drawPixmap(0, 0, ghost_sprites_shared[i]);
+        ns_painter.end();
+        
+        this->ghost_sprites.push_back(new_sprite);
+    }
 
     delete colored_body;
-
-    this->ghost_sprites.push_back(new_sprite);
 }
 
 /**
@@ -164,9 +175,8 @@ void Entity::set_next_sprite(entity_direction dir) {
             this->next_sprite_index = (this->next_sprite_index + 1) % PACMAN_SPRITES;
             break;
         case ghost:
-            //TODO: nahradit konstantní směr right za proměnný dir (zajištění animace duchů)
-            new_sprite_pixmap = QPixmap(*ghost_sprites[entity_direction::right]);
-            return;
+            new_sprite_pixmap = QPixmap(*ghost_sprites[dir]);
+            break;
     }
 
     this->setPixmap(new_sprite_pixmap);
