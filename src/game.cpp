@@ -847,7 +847,7 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
 
     if(not found)
     {
-        qWarning() << "[ERROR] node not found in checked node" << Qt::endl;
+        qWarning() << "[ERROR] node not found in checked node";
         return std::vector<entity_direction>(); //return empty vector
     }
 
@@ -881,7 +881,7 @@ std::vector<entity_direction> get_final_path(std::vector<Path_node> checked_node
     }
     else
     {
-        qWarning() << "[ERROR] unknown cord direction" << Qt::endl;
+        qWarning() << "[ERROR] unknown cord direction";
     }
     
     return get_final_path(checked_nodes, parent_cords);
@@ -922,7 +922,7 @@ std::vector<entity_direction> Game::ghost_pathfind(std::vector<Path_node> *path_
         // empty set
         gcost = 1;
         checked_nodes.clear();
-        qWarning() << "Ghost unable to find a path to pacman" << Qt::endl;
+        qWarning() << "Ghost unable to find a path to pacman";
         return std::vector<entity_direction> {entity_direction::stopped};
     }
 
@@ -985,7 +985,7 @@ void Game::ghost_pathfind_handler()
 
     if(index == -1)
     {
-        qWarning() << "[ERROR] index of ghost not found" << Qt::endl;
+        qWarning() << "[ERROR] index of ghost not found";
         return;
     }
 
@@ -1003,7 +1003,7 @@ void Game::ghost_pathfind_handler()
     Cords a = {pacman_pos_x, pacman_pos_y};
     Cords b = {ghost_pos_x, ghost_pos_y};
 
-    path_nodes->push_back(Path_node(b, std::pair(-1, -1), calc_fcost(a, b, 0)));
+    path_nodes->push_back(Path_node(b, std::pair<int, int>(-1, -1), calc_fcost(a, b, 0)));
     auto final_path = Game::ghost_pathfind(path_nodes, a);
 
     delete path_nodes;
