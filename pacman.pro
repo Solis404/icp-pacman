@@ -14,7 +14,7 @@ dox.commands = doxygen Doxyfile;
 run.target = run
 run.commands = ./pacman;
 pack.target = pack
-pack.commands = tar -cvzf xvolfr00-xuherp02.tgz src/* examples/* doc/* sprites/* README.txt Makefile pacman.pro
+pack.commands = tar -cvzf xvolfr00-xuherp02.tgz src/* examples/* doc/* sprites/* Doxyfile README.txt Makefile pacman.pro
 
 QMAKE_EXTRA_UNIX_TARGETS += dox run pack
 
