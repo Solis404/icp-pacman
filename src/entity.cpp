@@ -97,7 +97,6 @@ void Entity::get_color_sprites()
     int r = 0, g = 0, b = 0;
     
     sprite_body.load(ghost_body_temp);
-    sprite_eyes.load(ghost_sprites_shared[entity_direction::right]);
     
     mask = sprite_body.createMaskFromColor(QColor("#464646"), Qt::MaskOutColor);
     
