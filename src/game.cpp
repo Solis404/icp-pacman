@@ -771,6 +771,7 @@ void Replay::step_handler() {
         if(this->backtracking == false) {
             qDebug() << "[INFO]: Log is at end";
             this->step_timer->stop();
+            emit log_over();
             return;
         } else {
             qDebug() << "[INFO]: Log can't continue, hit start";

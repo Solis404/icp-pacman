@@ -149,6 +149,9 @@ class Replay : public Map_displayer {
 
     private slots:
     void step_handler();
+
+    signals:
+    void log_over();
 };
 
 #endif //GAME_H
